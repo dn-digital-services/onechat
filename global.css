@@ -1,1 +1,119 @@
+/*
+=========================================
+OneChat
+Global Styles
+Version : 1.0
+=========================================
+*/
 
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Reset */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+/* HTML */
+
+html{
+    scroll-behavior:smooth;
+    -webkit-tap-highlight-color:transparent;
+}
+
+/* Body */
+
+body{
+
+    font-family:var(--font-family);
+
+    background:var(--background-color);
+
+    color:var(--text-primary);
+
+    overflow-x:hidden;
+
+    min-height:100vh;
+
+    text-rendering:optimizeLegibility;
+
+    -webkit-font-smoothing:antialiased;
+
+    -moz-osx-font-smoothing:grayscale;
+
+}
+
+/* Images */
+
+img{
+
+    max-width:100%;
+
+    display:block;
+
+    user-select:none;
+
+    -webkit-user-drag:none;
+
+}
+
+/* Buttons */
+
+button{
+
+    border:none;
+
+    outline:none;
+
+    background:none;
+
+    cursor:pointer;
+
+    font-family:inherit;
+
+}
+
+/* Inputs */
+
+input,
+textarea{
+
+    border:none;
+
+    outline:none;
+
+    font-family:inherit;
+
+}
+
+/* Links */
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+/* Lists */
+
+ul,
+ol{
+
+    list-style:none;
+
+}
+
+/* Selection */
+
+::selection{
+
+    background:var(--primary-color);
+
+    color:#fff;
+
+}
