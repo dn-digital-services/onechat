@@ -1,9 +1,9 @@
-window.addEventListener("load",()=>{
+window.onload=function(){
 
-setTimeout(()=>{
+setTimeout(function(){
 
 window.location.href="welcome.html";
 
 },2500);
 
-});
+};
