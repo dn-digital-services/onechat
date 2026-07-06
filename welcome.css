@@ -1,1 +1,152 @@
+/*
+=========================================
+OneChat
+Welcome Screen
+Version 1.0
+=========================================
+*/
 
+.welcome-screen{
+
+    width:100%;
+    min-height:100vh;
+
+    background:#ffffff;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:40px 24px;
+
+}
+
+.top-section{
+
+    width:100%;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    margin-top:20px;
+
+}
+
+.logo{
+
+    width:150px;
+    height:auto;
+
+    animation:zoomIn .8s ease;
+
+}
+
+.middle-section{
+
+    width:100%;
+
+    text-align:center;
+
+    animation:fadeUp .8s ease;
+
+}
+
+.middle-section h1{
+
+    font-size:34px;
+
+    color:#0F172A;
+
+    font-weight:700;
+
+    line-height:1.3;
+
+}
+
+.middle-section p{
+
+    margin-top:14px;
+
+    font-size:16px;
+
+    color:#64748B;
+
+    line-height:1.7;
+
+}
+
+.illustration{
+
+    width:100%;
+    height:260px;
+
+    margin-top:35px;
+
+    border-radius:24px;
+
+    background:#F8FAFC;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+}
+
+.bottom-section{
+
+    width:100%;
+
+}
+
+#startBtn{
+
+    width:100%;
+    height:56px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:#2563EB;
+
+    color:#ffffff;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+#startBtn:hover{
+
+    background:#1D4ED8;
+
+}
+
+.login-text{
+
+    margin-top:22px;
+
+    text-align:center;
+
+    color:#64748B;
+
+    font-size:15px;
+
+}
+
+.login-text a{
+
+    color:#2563EB;
+
+    text-decoration:none;
+
+    font-weight:600;
+
+}
