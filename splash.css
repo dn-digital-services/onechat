@@ -1,228 +1,83 @@
-/*
-=========================================
-OneChat
-Splash Screen
-Version 1.0
-=========================================
-*/
+/* ===========================
+   OneChat Splash Screen
+=========================== */
+
+body{
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    overflow:hidden;
+    font-family:Arial,Helvetica,sans-serif;
+}
 
 .splash-screen{
-
-    position:fixed;
-    inset:0;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
 
     width:100%;
     height:100vh;
 
-    background:#ffffff;
-
-    overflow:hidden;
-
-}
-
-.brand{
-
     display:flex;
     flex-direction:column;
+
     justify-content:center;
     align-items:center;
 
-    text-align:center;
-
-    z-index:2;
+    background:#ffffff;
 
 }
 
 .logo{
 
-    width:100px;
-    height:auto;
+    width:180px;
+    max-width:65%;
 
-    animation:zoomIn .8s ease;
-
+    animation:fadeLogo .8s ease;
 }
 
-.app-name{
+/* Loading Circle */
 
-    margin-top:24px;
+.loader{
 
-    font-size:36px;
+    width:42px;
+    height:42px;
 
-    font-weight:700;
+    margin-top:120px;
 
-    color:#0F172A;
+    border:4px solid #E5E7EB;
 
-    letter-spacing:-1px;
-
-    animation:fadeUp .8s ease;
-
-}
-
-.tagline{
-
-    margin-top:10px;
-
-    font-size:16px;
-
-    color:#64748B;
-
-    font-weight:500;
-
-    animation:fadeUp 1s ease;
-
-}
-
-.version{
-
-    position:absolute;
-
-    bottom:35px;
-
-    left:50%;
-
-    transform:translateX(-50%);
-
-    font-size:13px;
-
-    color:#94A3B8;
-
-    font-weight:500;
-
-}
-
-/* =========================================
-   Premium Background Glow
-========================================= */
-
-.splash-screen::before{
-
-    content:"";
-
-    position:absolute;
-
-    width:260px;
-    height:260px;
+    border-top:4px solid #2563EB;
 
     border-radius:50%;
 
-    background:rgba(37,99,235,.08);
-
-    filter:blur(50px);
-
-    top:50%;
-    left:50%;
-
-    transform:translate(-50%,-55%);
-
-    z-index:1;
-
-    animation:pulse 3s infinite;
+    animation:spin .8s linear infinite;
 
 }
 
-/* =========================================
-   Hover
-========================================= */
+/* Animation */
 
-.logo{
+@keyframes spin{
 
-    transition:.35s ease;
+    100%{
 
-}
+        transform:rotate(360deg);
 
-.logo:hover{
-
-    transform:scale(1.05);
+    }
 
 }
 
-/* =========================================
-   Mobile
-========================================= */
+@keyframes fadeLogo{
 
-@media(max-width:576px){
+    from{
 
-.logo{
+        opacity:0;
+        transform:scale(.9);
 
-    width:90px;
+    }
 
-}
+    to{
 
-.app-name{
+        opacity:1;
+        transform:scale(1);
 
-    font-size:30px;
-
-}
-
-.tagline{
-
-    font-size:15px;
-
-}
-
-.version{
-
-    bottom:25px;
-
-}
-
-}
-
-/* =========================================
-   Tablet
-========================================= */
-
-@media(min-width:768px){
-
-.logo{
-
-    width:110px;
-
-}
-
-.app-name{
-
-    font-size:40px;
-
-}
-
-}
-
-/* =========================================
-   Desktop
-========================================= */
-
-@media(min-width:1200px){
-
-.logo{
-
-    width:120px;
-
-}
-
-.app-name{
-
-    font-size:44px;
-
-}
-
-}
-
-/* =========================================
-   iPhone Safe Area
-========================================= */
-
-@supports(padding:max(0px)){
-
-.version{
-
-padding-bottom:max(10px,env(safe-area-inset-bottom));
-
-}
+    }
 
 }
