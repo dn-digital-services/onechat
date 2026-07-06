@@ -1,1 +1,105 @@
+/*
+=========================================
+OneChat
+Variables
+Version : 1.0
+=========================================
+*/
 
+:root{
+
+    /* Brand Colors */
+
+    --primary-color:#2563EB;
+    --primary-hover:#1D4ED8;
+
+    --background-color:#FFFFFF;
+
+    --surface-color:#F8FAFC;
+
+    --text-primary:#0F172A;
+    --text-secondary:#64748B;
+
+    --border-color:#E2E8F0;
+
+    --success-color:#22C55E;
+    --error-color:#EF4444;
+    --warning-color:#F59E0B;
+
+
+
+    /* Font */
+
+    --font-family:'Poppins',sans-serif;
+
+
+
+    /* Border Radius */
+
+    --radius-small:12px;
+    --radius-medium:16px;
+    --radius-large:20px;
+    --radius-full:999px;
+
+
+
+    /* Shadow */
+
+    --shadow-small:
+    0 2px 8px rgba(15,23,42,.05);
+
+    --shadow-medium:
+    0 8px 24px rgba(15,23,42,.08);
+
+    --shadow-large:
+    0 16px 40px rgba(15,23,42,.10);
+
+
+
+    /* Transition */
+
+    --transition-fast:.2s ease;
+
+    --transition-normal:.3s ease;
+
+    --transition-slow:.5s ease;
+
+
+
+    /* Layout */
+
+    --page-padding:24px;
+
+    --button-height:56px;
+
+    --input-height:56px;
+
+    --header-height:70px;
+
+    --bottom-nav-height:72px;
+
+
+
+    /* Icon */
+
+    --icon-small:20px;
+
+    --icon-medium:24px;
+
+    --icon-large:28px;
+
+
+
+    /* Font Size */
+
+    --font-xs:12px;
+
+    --font-sm:14px;
+
+    --font-md:16px;
+
+    --font-lg:20px;
+
+    --font-xl:28px;
+
+}
