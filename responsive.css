@@ -1,1 +1,98 @@
+/*
+=========================================
+OneChat
+Responsive Styles
+Version : 1.0
+=========================================
+*/
 
+/* Large Desktop */
+@media (min-width:1440px){
+
+    body{
+        font-size:16px;
+    }
+
+}
+
+/* Desktop */
+@media (max-width:1200px){
+
+    :root{
+        --page-padding:22px;
+    }
+
+}
+
+/* Laptop */
+@media (max-width:992px){
+
+    :root{
+        --page-padding:20px;
+    }
+
+}
+
+/* Tablet */
+@media (max-width:768px){
+
+    :root{
+
+        --page-padding:18px;
+
+        --font-xl:26px;
+
+        --button-height:54px;
+
+        --input-height:54px;
+
+    }
+
+}
+
+/* Large Mobile */
+@media (max-width:576px){
+
+    :root{
+
+        --page-padding:16px;
+
+        --font-xl:24px;
+
+        --font-lg:18px;
+
+        --button-height:52px;
+
+        --input-height:52px;
+
+    }
+
+}
+
+/* Small Mobile */
+@media (max-width:360px){
+
+    :root{
+
+        --page-padding:14px;
+
+        --font-xl:22px;
+
+        --font-lg:17px;
+
+        --button-height:50px;
+
+        --input-height:50px;
+
+    }
+
+}
+
+/* Landscape Support */
+@media (orientation:landscape){
+
+    body{
+        min-height:100vh;
+    }
+
+}
