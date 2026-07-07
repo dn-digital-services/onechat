@@ -43,22 +43,11 @@ body{
 /* Logo */
 
 .logo{
-
-    width:180px;
+    width:260px;
+    max-width:80%;
     height:auto;
-
-    max-width:65%;
-
-    object-fit:contain;
-
     display:block;
-
-    user-select:none;
-
-    -webkit-user-drag:none;
-
-    animation:logoAnimation .8s ease forwards;
-
+    object-fit:contain;
 }
 /* Loader */
 
