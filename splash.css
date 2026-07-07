@@ -43,12 +43,11 @@ body{
 /* Logo */
 
 .logo{
-    width:260px;
-    max-width:80%;
-    height:auto;
-    display:block;
-    object-fit:contain;
+    width:300px !important;
+    max-width:none !important;
+    height:auto !important;
 }
+
 /* Loader */
 
 .loader{
