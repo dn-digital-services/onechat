@@ -1,71 +1,51 @@
 /*
 =========================================
 OneChat Splash Screen
-Version : 1.0 FINAL
 =========================================
 */
 
 html,
 body{
-
     margin:0;
     padding:0;
-
     width:100%;
     height:100%;
-
     overflow:hidden;
-
     background:#ffffff;
-
     font-family:'Poppins',sans-serif;
-
 }
 
 .splash-screen{
-
     position:fixed;
-
     inset:0;
-
+    background:#fff;
     display:flex;
-
     flex-direction:column;
-
     justify-content:center;
-
     align-items:center;
-
-    background:#ffffff;
-
 }
 
 /* Logo */
 
 .logo{
-    width:300px !important;
-    max-width:none !important;
-    height:auto !important;
+    width:180px;
+    max-width:70%;
+    height:auto;
+    user-select:none;
+    -webkit-user-drag:none;
+    animation:logoAnimation .6s ease;
 }
 
 /* Loader */
 
 .loader{
-
-    width:28px;
-
-    height:28px;
-
-    margin-top:120px;
-
-    border:3px solid #E5E7EB;
-
-    border-top:3px solid #2563EB;
-
+    width:30px;
+    height:30px;
+    margin-top:110px;
+    border:4px solid #e4e4e4;
+    border-top:4px solid #2563eb;
     border-radius:50%;
-
     animation:loaderSpin .8s linear infinite;
-
 }
 
 /* Logo Animation */
@@ -73,19 +53,13 @@ body{
 @keyframes logoAnimation{
 
     from{
-
         opacity:0;
-
-        transform:translateY(15px) scale(.95);
-
+        transform:scale(.96);
     }
 
     to{
-
         opacity:1;
-
-        transform:translateY(0) scale(1);
-
+        transform:scale(1);
     }
 
 }
@@ -95,34 +69,12 @@ body{
 @keyframes loaderSpin{
 
     from{
-
         transform:rotate(0deg);
-
     }
 
     to{
-
         transform:rotate(360deg);
-
     }
-
-}
-
-/* Tablet */
-
-@media (max-width:768px){
-
-.logo{
-
-    width:190px;
-
-}
-
-.loader{
-
-    margin-top:80px;
-
-}
 
 }
 
@@ -130,52 +82,14 @@ body{
 
 @media (max-width:480px){
 
-.logo{
+    .logo{
+        width:175px;
+    }
 
-    width:170px;
-
-}
-
-.loader{
-
-    width:28px;
-
-    height:28px;
-
-    margin-top:70px;
-
-}
-
-}
-
-/* Small Mobile */
-
-@media (max-width:360px){
-
-.logo{
-
-    width:155px;
-
-}
-
-.loader{
-
-    width:24px;
-
-    height:24px;
-
-}
-
-}
-
-/* Safe Area */
-
-@supports(padding:max(0px)){
-
-.splash-screen{
-
-padding-bottom:max(70px,env(safe-area-inset-bottom));
-
-}
+    .loader{
+        margin-top:100px;
+        width:28px;
+        height:28px;
+    }
 
 }
