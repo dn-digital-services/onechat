@@ -1,1 +1,200 @@
+/*
+=========================================
+OneChat
+OTP Screen
+Version : 1.0
+=========================================
+*/
 
+.otp-screen{
+
+    width:100%;
+    min-height:100vh;
+
+    background:var(--background-color);
+
+    display:flex;
+    flex-direction:column;
+
+    padding:60px var(--page-padding);
+
+}
+
+.top-section{
+
+    text-align:center;
+
+    animation:fadeUp .6s ease;
+
+}
+
+.top-section h1{
+
+    font-size:var(--font-xl);
+
+    color:var(--text-primary);
+
+    font-weight:700;
+
+}
+
+.top-section p{
+
+    margin-top:12px;
+
+    color:var(--text-secondary);
+
+    font-size:var(--font-sm);
+
+    line-height:1.6;
+
+}
+
+#identifierText{
+
+    color:var(--text-primary);
+
+    font-weight:600;
+
+}
+
+.middle-section{
+
+    margin-top:44px;
+
+    animation:fadeUp .7s ease;
+
+}
+
+.otp-inputs{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:14px;
+
+}
+
+.otp-box{
+
+    width:60px;
+    height:64px;
+
+    text-align:center;
+
+    font-size:24px;
+
+    font-weight:700;
+
+    border:1.5px solid var(--border-color);
+
+    border-radius:var(--radius-small);
+
+    background:var(--surface-color);
+
+    color:var(--text-primary);
+
+    transition:var(--transition-fast);
+
+}
+
+.otp-box:focus{
+
+    border-color:var(--primary-color);
+
+    background:var(--background-color);
+
+}
+
+.error-msg{
+
+    min-height:18px;
+
+    margin-top:16px;
+
+    text-align:center;
+
+    color:var(--error-color);
+
+    font-size:var(--font-xs);
+
+}
+
+.resend-text{
+
+    margin-top:18px;
+
+    text-align:center;
+
+    color:var(--text-secondary);
+
+    font-size:15px;
+
+}
+
+.resend-text a{
+
+    color:var(--primary-color);
+
+    font-weight:600;
+
+}
+
+.resend-text a.disabled{
+
+    color:var(--text-secondary);
+
+    pointer-events:none;
+
+}
+
+#verifyBtn{
+
+    width:100%;
+    height:var(--button-height);
+
+    margin-top:36px;
+
+    border-radius:var(--radius-small);
+
+    background:var(--primary-color);
+
+    color:#ffffff;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    transition:var(--transition-normal);
+
+}
+
+#verifyBtn:hover{
+
+    background:var(--primary-hover);
+
+}
+
+#verifyBtn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}
+
+/* Small Mobile */
+
+@media (max-width:360px){
+
+    .otp-box{
+        width:52px;
+        height:58px;
+    }
+
+    .otp-inputs{
+        gap:10px;
+    }
+
+}

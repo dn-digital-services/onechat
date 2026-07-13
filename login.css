@@ -1,1 +1,204 @@
+/*
+=========================================
+OneChat
+Login Screen
+Version : 1.0
+=========================================
+*/
 
+.login-screen{
+
+    width:100%;
+    min-height:100vh;
+
+    background:var(--background-color);
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+
+    padding:40px var(--page-padding);
+
+}
+
+.top-section{
+
+    text-align:center;
+
+    animation:fadeUp .6s ease;
+
+}
+
+.top-section .logo{
+
+    width:90px;
+    height:auto;
+
+    margin:0 auto 22px;
+
+}
+
+.top-section h1{
+
+    font-size:var(--font-xl);
+
+    color:var(--text-primary);
+
+    font-weight:700;
+
+}
+
+.top-section p{
+
+    margin-top:10px;
+
+    color:var(--text-secondary);
+
+    font-size:var(--font-sm);
+
+}
+
+.middle-section{
+
+    width:100%;
+
+    margin-top:36px;
+
+    animation:fadeUp .7s ease;
+
+}
+
+.input-group{
+
+    margin-bottom:18px;
+
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-size:var(--font-sm);
+
+    font-weight:600;
+
+    color:var(--text-primary);
+
+}
+
+.input-group input{
+
+    width:100%;
+    height:var(--input-height);
+
+    padding:0 16px;
+
+    border:1.5px solid var(--border-color);
+
+    border-radius:var(--radius-small);
+
+    background:var(--surface-color);
+
+    font-size:var(--font-md);
+
+    color:var(--text-primary);
+
+    transition:var(--transition-fast);
+
+}
+
+.input-group input:focus{
+
+    border-color:var(--primary-color);
+
+    background:var(--background-color);
+
+}
+
+.error-msg{
+
+    min-height:18px;
+
+    margin-top:-6px;
+    margin-bottom:10px;
+
+    color:var(--error-color);
+
+    font-size:var(--font-xs);
+
+}
+
+.forgot-link{
+
+    display:block;
+
+    text-align:right;
+
+    margin-bottom:24px;
+
+    color:var(--primary-color);
+
+    font-size:var(--font-sm);
+
+    font-weight:600;
+
+}
+
+#loginBtn{
+
+    width:100%;
+    height:var(--button-height);
+
+    border-radius:var(--radius-small);
+
+    background:var(--primary-color);
+
+    color:#ffffff;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    transition:var(--transition-normal);
+
+}
+
+#loginBtn:hover{
+
+    background:var(--primary-hover);
+
+}
+
+#loginBtn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}
+
+.bottom-section{
+
+    width:100%;
+
+}
+
+.signup-text{
+
+    text-align:center;
+
+    color:var(--text-secondary);
+
+    font-size:15px;
+
+}
+
+.signup-text a{
+
+    color:var(--primary-color);
+
+    font-weight:600;
+
+}

@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Verify | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="otp.css">
+
+</head>
+
+<body>
+
+<div class="otp-screen">
+
+    <div class="top-section">
+
+        <h1>Verify your number</h1>
+
+        <p>
+            We sent a 4-digit code to
+            <br>
+            <span id="identifierText">your number</span>
+        </p>
+
+    </div>
+
+    <form id="otpForm" class="middle-section">
+
+        <div class="otp-inputs">
+
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-index="0">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-index="1">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-index="2">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-index="3">
+
+        </div>
+
+        <p id="errorMsg" class="error-msg"></p>
+
+        <p class="resend-text">
+
+            Didn't get the code?
+
+            <a href="#" id="resendLink">Resend <span id="resendTimer"></span></a>
+
+        </p>
+
+        <button type="submit" id="verifyBtn">Verify</button>
+
+    </form>
+
+</div>
+
+<script src="app.js"></script>
+<script src="otp.js"></script>
+
+</body>
+
+</html>

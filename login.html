@@ -1,1 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="login.css">
+
+</head>
+
+<body>
+
+<div class="login-screen">
+
+    <div class="top-section">
+
+        <img
+        src="logo.PNG"
+        class="logo"
+        alt="OneChat">
+
+        <h1>Welcome back</h1>
+
+        <p>Log in to keep the conversation going.</p>
+
+    </div>
+
+    <form id="loginForm" class="middle-section">
+
+        <div class="input-group">
+            <label for="phone">Phone number or email</label>
+            <input
+            type="text"
+            id="phone"
+            placeholder="e.g. +1 555 123 4567"
+            required
+            autocomplete="username">
+        </div>
+
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            required
+            autocomplete="current-password">
+        </div>
+
+        <p id="errorMsg" class="error-msg"></p>
+
+        <a href="#" class="forgot-link">Forgot password?</a>
+
+        <button type="submit" id="loginBtn">Continue</button>
+
+    </form>
+
+    <div class="bottom-section">
+
+        <p class="signup-text">
+
+            Don't have an account?
+
+            <a href="welcome.html">Sign up</a>
+
+        </p>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+<script src="login.js"></script>
+
+</body>
+
+</html>
