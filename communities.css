@@ -1,0 +1,374 @@
+/*
+=========================================
+OneChat
+Communities Screen (Dark UI)
+Version : 1.0
+=========================================
+*/
+
+.communities-screen{
+
+    --dark-bg:#0B141A;
+    --dark-surface:#111B21;
+    --dark-elevated:#1F2C34;
+    --dark-border:#233138;
+    --dark-text:#E9EDEF;
+    --dark-text-secondary:#8696A0;
+    --accent-green:#00A884;
+
+    width:100%;
+    min-height:100vh;
+
+    background:var(--dark-bg);
+
+    display:flex;
+    flex-direction:column;
+
+    padding-bottom:var(--bottom-nav-height);
+
+    font-family:var(--font-family);
+
+    color:var(--dark-text);
+
+}
+
+/* Header */
+
+.communities-header{
+
+    height:56px;
+
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+
+    padding:0 14px;
+
+    animation:fadeIn .4s ease;
+
+}
+
+.icon-btn{
+
+    width:44px;
+    height:44px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:var(--dark-text);
+
+    background:transparent;
+
+    cursor:pointer;
+
+    transition:var(--transition-fast);
+
+}
+
+.icon-btn svg{
+
+    width:22px;
+    height:22px;
+
+}
+
+.icon-btn.accent{
+
+    background:var(--accent-green);
+
+    color:#0B141A;
+
+}
+
+.icon-btn.accent:hover{
+
+    background:#02c497;
+
+}
+
+/* Title */
+
+.title-row{
+
+    padding:2px 16px 0;
+
+    animation:fadeUp .5s ease;
+
+}
+
+.title-row h1{
+
+    font-size:32px;
+
+    font-weight:700;
+
+    letter-spacing:-.4px;
+
+}
+
+/* Empty State */
+
+.empty-state{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:26px 28px 20px;
+
+    animation:fadeUp .6s ease;
+
+}
+
+.illustration{
+
+    width:120px;
+    height:120px;
+
+    margin-bottom:26px;
+
+}
+
+.illustration svg{
+
+    width:100%;
+    height:100%;
+
+}
+
+.empty-state h2{
+
+    font-size:19px;
+
+    font-weight:700;
+
+    color:var(--dark-text);
+
+    max-width:280px;
+
+}
+
+.empty-state p{
+
+    margin-top:12px;
+
+    font-size:14px;
+
+    line-height:1.6;
+
+    color:var(--dark-text-secondary);
+
+    max-width:300px;
+
+}
+
+.example-link{
+
+    margin-top:20px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:4px;
+
+    color:var(--accent-green);
+
+    font-size:14.5px;
+
+    font-weight:600;
+
+}
+
+.example-link svg{
+
+    width:16px;
+    height:16px;
+
+}
+
+.new-community-btn{
+
+    margin-top:28px;
+
+    width:100%;
+    max-width:340px;
+    height:52px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    border-radius:var(--radius-full);
+
+    background:#7BC97D;
+
+    color:#0B141A;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    transition:var(--transition-fast);
+
+}
+
+.new-community-btn svg{
+
+    width:18px;
+    height:18px;
+
+}
+
+.new-community-btn:hover{
+
+    background:#69bb6b;
+
+}
+
+/* Bottom Nav */
+
+.bottom-nav{
+
+    position:fixed;
+
+    bottom:0;
+    left:0;
+    right:0;
+
+    height:var(--bottom-nav-height);
+
+    display:flex;
+
+    background:var(--dark-surface);
+
+    border-top:1px solid var(--dark-border);
+
+}
+
+.nav-item{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:3px;
+
+    color:var(--dark-text-secondary);
+
+    font-size:11px;
+
+    font-weight:600;
+
+}
+
+.nav-item.active{
+
+    color:var(--dark-text);
+
+}
+
+.nav-icon{
+
+    width:23px;
+    height:23px;
+
+}
+
+.nav-item.active .nav-icon{
+
+    color:var(--accent-green);
+
+}
+
+.nav-icon-wrap{
+
+    position:relative;
+
+    display:flex;
+
+}
+
+.nav-badge{
+
+    position:absolute;
+
+    top:-6px;
+    right:-9px;
+
+    min-width:16px;
+    height:16px;
+
+    padding:0 4px;
+
+    border-radius:var(--radius-full);
+
+    background:var(--accent-green);
+
+    color:#0B141A;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+}
+
+.nav-avatar{
+
+    width:23px;
+    height:23px;
+
+    border-radius:50%;
+
+    background:var(--dark-elevated);
+
+    color:var(--dark-text);
+
+    font-size:10px;
+
+    font-weight:700;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+}
+
+.nav-dot{
+
+    position:absolute;
+
+    bottom:-2px;
+    right:-2px;
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    background:var(--accent-green);
+
+    border:2px solid var(--dark-surface);
+
+}
