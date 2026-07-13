@@ -123,6 +123,8 @@ Version : 1.0
 
     display:flex;
 
+    justify-content:center;
+
     gap:22px;
 
     padding:0 16px 22px;
