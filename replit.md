@@ -10,8 +10,11 @@ OneChat is a static HTML/CSS/JS front-end prototype for a messaging app. There i
 - `login.html` — phone/email + password form (no real auth) → `otp.html`
 - `otp.html` — 4-digit code entry (any 4 digits work) → `permissions.html`
 - `permissions.html` — toggle contacts/notifications/mic/camera → `home.html`
-- `home.html` — mock chat list + bottom nav (guarded: redirects to `welcome.html` if onboarding not completed)
-- `profile.html` — user profile + settings list + logout (same guard)
+- `home.html` — dark WhatsApp-style chat list (search, filter chips, mock conversations) + bottom nav (guarded: redirects to `welcome.html` if onboarding not completed)
+- `calls.html` — dark call log screen (quick actions row + recent calls with incoming/outgoing/missed icons), same guard/bottom nav
+- `profile.html` — dark settings screen (Account, Privacy, Chats, Appearance, Notifications, Payments, Storage and data, Help and feedback, Invite a friend, Accounts Centre) + logout, same guard/bottom nav
+
+`home.html`, `calls.html`, and `profile.html` share a dark WhatsApp-inspired visual style (scoped CSS variables prefixed `--dark-*` inside each screen's root class) with hand-drawn SVG line icons instead of emoji, and an identical 5-tab bottom nav (Updates, Calls, Communities, Chats, You). "Updates" and "Communities" tabs are placeholders (no page built yet) — Communities links to `permissions.html` as a stand-in.
 
 Shared styles: `variables.css` (design tokens), `global.css` (reset), `responsive.css`, `animations.css`. Each screen also has its own `<name>.css` and `<name>.js`. `app.js` is a shared script include (currently empty, kept for consistency with the original file layout).
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Calls | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="calls.css">
+
+</head>
+
+<body>
+
+<div class="calls-screen">
+
+    <header class="calls-header">
+
+        <button class="icon-btn" title="Menu">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg>
+        </button>
+
+        <button class="icon-btn accent" title="New call">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+
+    </header>
+
+    <div class="title-row">
+        <h1>Calls</h1>
+    </div>
+
+    <div class="quick-actions">
+
+        <div class="quick-action">
+            <span class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 8.5 6.5 15 15 15l1-4-5-2-2 2A13 13 0 0 1 8 9l2-2-2-5z"/></svg>
+            </span>
+            <span>Call</span>
+        </div>
+
+        <div class="quick-action">
+            <span class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+            </span>
+            <span>Schedule</span>
+        </div>
+
+        <div class="quick-action">
+            <span class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="1.4" fill="currentColor" stroke="none"/>
+                    <circle cx="6" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+                    <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="1.4" fill="currentColor" stroke="none"/>
+                </svg>
+            </span>
+            <span>Keypad</span>
+        </div>
+
+        <div class="quick-action">
+            <span class="quick-icon avatar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg>
+            </span>
+            <span>Priya Sharma</span>
+        </div>
+
+        <div class="quick-action">
+            <span class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+            </span>
+            <span>Favourites</span>
+        </div>
+
+    </div>
+
+    <h3 class="section-title">Recent</h3>
+
+    <main class="calls-list" id="callsList"></main>
+
+    <nav class="bottom-nav">
+
+        <a href="#" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>Updates</span>
+        </a>
+
+        <a href="calls.html" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 8.5 6.5 15 15 15l1-4-5-2-2 2A13 13 0 0 1 8 9l2-2-2-5z"/></svg>
+            <span>Calls</span>
+        </a>
+
+        <a href="permissions.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="10" cy="7" r="3.5"/><path d="M22 20v-1a3.8 3.8 0 0 0-2.7-3.6"/><path d="M15.5 3.7A3.8 3.8 0 0 1 18 7a3.8 3.8 0 0 1-2.5 3.6"/></svg>
+            <span>Communities</span>
+        </a>
+
+        <a href="home.html" class="nav-item">
+            <span class="nav-icon-wrap">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.6-6.7L21 4l-1.2 3.9A8 8 0 0 1 21 12z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+                <span class="nav-badge">2</span>
+            </span>
+            <span>Chats</span>
+        </a>
+
+        <a href="profile.html" class="nav-item">
+            <span class="nav-icon-wrap">
+                <span class="nav-avatar" id="navAvatar">OC</span>
+                <span class="nav-dot"></span>
+            </span>
+            <span>You</span>
+        </a>
+
+    </nav>
+
+</div>
+
+<script src="app.js"></script>
+<script src="calls.js"></script>
+
+</body>
+
+</html>
