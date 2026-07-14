@@ -34,13 +34,28 @@ window.addEventListener("load", () => {
     }
 
     const infoAvatar = document.getElementById("infoAvatar");
+    const pvPhoto = document.getElementById("pvPhoto");
     const initials = ocGetInitials(name);
 
     if(isSelf){
         ocApplyAvatar(infoAvatar, initials);
+        ocApplyAvatar(pvPhoto, initials);
     } else {
         infoAvatar.textContent = initials;
+        pvPhoto.textContent = initials;
     }
+
+    document.getElementById("pvName").textContent = name.replace(/\s*\(You\)\s*$/, "");
+
+    const photoViewer = document.getElementById("photoViewer");
+
+    infoAvatar.addEventListener("click", () => {
+        photoViewer.classList.add("open");
+    });
+
+    document.getElementById("pvClose").addEventListener("click", () => {
+        photoViewer.classList.remove("open");
+    });
 
     document.getElementById("backBtn").addEventListener("click", () => {
         window.history.back();
