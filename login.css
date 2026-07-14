@@ -237,7 +237,8 @@ Version : 1.0
 
 }
 
-#loginBtn{
+#loginBtn,
+#emailLoginBtn{
 
     width:100%;
     height:var(--button-height);
@@ -256,13 +257,15 @@ Version : 1.0
 
 }
 
-#loginBtn:hover{
+#loginBtn:hover,
+#emailLoginBtn:hover{
 
     background:var(--primary-hover);
 
 }
 
-#loginBtn:disabled{
+#loginBtn:disabled,
+#emailLoginBtn:disabled{
 
     opacity:.6;
 

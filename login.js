@@ -148,11 +148,12 @@ window.addEventListener("load", () => {
         }
 
         emailLoginBtn.disabled = true;
-        emailLoginBtn.textContent = "Please wait...";
+        emailLoginBtn.textContent = "Logging in...";
 
         try {
 
             let userCredential;
+            let isNewAccount = false;
 
             try {
 
@@ -162,6 +163,7 @@ window.addEventListener("load", () => {
 
                 if(err.code === "auth/user-not-found" || err.code === "auth/invalid-credential"){
                     userCredential = await createUserWithEmailAndPassword(auth, emailValue, passwordValue);
+                    isNewAccount = true;
                 } else {
                     throw err;
                 }
@@ -170,24 +172,20 @@ window.addEventListener("load", () => {
 
             await ensureUserProfile(userCredential.user, { email: emailValue });
 
-            window.location.href = "permissions.html";
+            // Existing accounts go straight to the home/chat screen; only a brand
+            // new account needs the onboarding/permissions step first.
+            window.location.href = isNewAccount ? "permissions.html" : "home.html";
 
         } catch(err) {
 
             console.error("Email sign-in failed:", err);
 
-            if(err.code === "auth/wrong-password"){
-                emailErrorMsg.textContent = "Incorrect password.";
-            } else if(err.code === "auth/weak-password"){
-                emailErrorMsg.textContent = "Password must be at least 6 characters.";
-            } else if(err.code === "auth/invalid-email"){
-                emailErrorMsg.textContent = "That email address looks invalid.";
-            } else {
-                emailErrorMsg.textContent = "Couldn't sign in. Please try again.";
-            }
+            // Surface the actual Firebase error message so the user sees exactly
+            // why the login failed, instead of a generic message.
+            emailErrorMsg.textContent = (err && err.message) ? err.message : "Couldn't sign in. Please try again.";
 
             emailLoginBtn.disabled = false;
-            emailLoginBtn.textContent = "Continue";
+            emailLoginBtn.textContent = "Login";
 
         }
 
