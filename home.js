@@ -37,6 +37,26 @@ window.addEventListener("load", () => {
 
     const totalUnread = conversations.reduce((sum, c) => sum + (c.unread || 0), 0);
 
+    function getLastMessage(name){
+
+        try {
+
+            const raw = localStorage.getItem(`oc_chat_history_${name}`);
+
+            if(!raw) return null;
+
+            const history = JSON.parse(raw);
+
+            if(!Array.isArray(history) || history.length === 0) return null;
+
+            return history[history.length - 1];
+
+        } catch(e) {
+            return null;
+        }
+
+    }
+
     function renderList(filter){
 
         chatList.innerHTML = "";
@@ -61,10 +81,31 @@ window.addEventListener("load", () => {
 
             let previewIcon = "";
             let msgClass = c.unread > 0 ? "bold" : "";
+            let message = c.message;
+            let time = c.time;
+            let isRead = c.read;
+
+            const chatName = c.self ? (localStorage.getItem("oc_identifier") ? `${localStorage.getItem("oc_identifier")} (You)` : "You") : c.name;
+            const lastMsg = getLastMessage(chatName);
+
+            if(lastMsg){
+
+                time = lastMsg.time;
+                isRead = lastMsg.status === "read" || (lastMsg.outgoing && lastMsg.status !== undefined);
+
+                if(lastMsg.type === "file"){
+                    message = lastMsg.fileName || "Document";
+                } else if(lastMsg.type === "image"){
+                    message = "Photo";
+                } else {
+                    message = lastMsg.text;
+                }
+
+            }
 
             if(c.type === "call") previewIcon = ICONS.videoCall;
-            else if(c.type === "photo") previewIcon = ICONS.photo;
-            else if(c.read) previewIcon = ICONS.checkRead;
+            else if(!lastMsg && c.type === "photo") previewIcon = ICONS.photo;
+            else if(isRead) previewIcon = ICONS.checkRead;
 
             const item = document.createElement("div");
             item.className = "chat-item";
@@ -74,12 +115,12 @@ window.addEventListener("load", () => {
                 <div class="chat-info">
                     <div class="chat-top">
                         <h3>${c.name}</h3>
-                        <span class="chat-time ${c.unread > 0 ? "unread-time" : ""}">${c.time}</span>
+                        <span class="chat-time ${c.unread > 0 ? "unread-time" : ""}">${time}</span>
                     </div>
                     <div class="chat-preview">
                         <span class="chat-preview-text">
                             ${previewIcon}
-                            <span class="msg-text ${msgClass}">${c.message}</span>
+                            <span class="msg-text ${msgClass}">${message}</span>
                         </span>
                         ${c.unread > 0 ? `<span class="unread-badge">${c.unread}</span>` : ""}
                     </div>
