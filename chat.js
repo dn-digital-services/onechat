@@ -1,12 +1,32 @@
-window.addEventListener("load", () => {
+import {
+    db,
+    storage,
+    doc,
+    getDoc,
+    updateDoc,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    requireAuthAndOnboarding,
+} from "./firebase.js";
 
-    if(localStorage.getItem("oc_onboarded") !== "true"){
-        window.location.href = "welcome.html";
-        return;
-    }
+window.addEventListener("load", async () => {
+
+    const session = await requireAuthAndOnboarding("welcome.html");
+
+    if(!session) return;
+
+    const { user } = session;
 
     const params = new URLSearchParams(window.location.search);
 
+    const chatId = params.get("chatId") || "self";
     const name = params.get("name") || "OneChat User";
     const subtitle = params.get("subtitle") || "tap for contact info";
     const isSelf = params.get("self") === "1";
@@ -27,7 +47,7 @@ window.addEventListener("load", () => {
     const initials = ocGetInitials(name);
 
     if(isSelf){
-        ocApplyAvatar(chatAvatar, initials);
+        ocApplyAvatar(chatAvatar, initials, session.profile.photoURL);
     } else {
         chatAvatar.textContent = initials;
     }
@@ -40,7 +60,7 @@ window.addEventListener("load", () => {
 
     document.getElementById("chatTitleBtn").addEventListener("click", () => {
 
-        const query = new URLSearchParams({ name, subtitle });
+        const query = new URLSearchParams({ chatId, name, subtitle });
 
         if(isSelf) query.set("self", "1");
 
@@ -92,7 +112,7 @@ window.addEventListener("load", () => {
                         <span class="file-icon">PDF</span>
                         <div class="file-info">
                             <div class="file-name">${fileName}</div>
-                            <div class="file-meta">${meta}</div>
+                            <div class="file-meta">${meta || ""}</div>
                         </div>
                     </div>
                 </div>
@@ -104,15 +124,17 @@ window.addEventListener("load", () => {
 
     }
 
-    function addImageMessage({ outgoing, imageHtml, time, status }){
+    function addImageMessage({ outgoing, imageHtml, fileURL, time, status }){
 
         const row = document.createElement("div");
         row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
 
+        const preview = fileURL ? `<img src="${fileURL}" alt="Photo" style="max-width:100%;border-radius:8px;display:block;">` : (imageHtml || "");
+
         row.innerHTML = `
             <span class="share-btn">${ICONS.share}</span>
             <div class="bubble">
-                <div class="image-preview">${imageHtml}</div>
+                <div class="image-preview">${preview}</div>
                 <span class="bubble-time">${time} ${status === "read" ? `<span class="tick-read">${ICONS.readTicks}</span>` : status === "sent" ? ICONS.sentTick : ""}</span>
             </div>
         `;
@@ -141,7 +163,7 @@ window.addEventListener("load", () => {
 
     function escapeHtml(str){
         const div = document.createElement("div");
-        div.textContent = str;
+        div.textContent = str || "";
         return div.innerHTML;
     }
 
@@ -149,119 +171,75 @@ window.addEventListener("load", () => {
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    addSystemNote(ICONS.lock, "Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. <b>Learn more</b>");
-    addSystemNote(ICONS.clock, "You use a default timer for disappearing messages in new chats. New messages will disappear from this chat 90 days after they're sent, except when kept. <b>Change timer</b>", true);
-    addDateDivider("Today");
-
-    const historyKey = `oc_chat_history_${name}`;
-
-    function loadHistory(){
-        try {
-            const raw = localStorage.getItem(historyKey);
-            return raw ? JSON.parse(raw) : null;
-        } catch(e) {
-            return null;
-        }
+    function formatTime(ts){
+        if(!ts) return "";
+        const date = ts.toDate ? ts.toDate() : new Date(ts);
+        return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     }
 
-    function saveHistory(history){
-        localStorage.setItem(historyKey, JSON.stringify(history));
-    }
+    const chatDocRef = doc(db, "users", user.uid, "chats", chatId);
+    const messagesRef = collection(chatDocRef, "messages");
 
-    let history = loadHistory();
+    // Seed the initial conversation history once per chat, mirroring the app's demo script.
+    const chatSnap = await getDoc(chatDocRef);
 
-    if(!history){
+    if(chatSnap.exists() && !chatSnap.data().seeded){
 
-        history = [];
-
-        if(isSelf){
-
-            history.push({
-                type: "file",
-                outgoing: true,
-                fileName: "8B0D5E5B-8D90-4916-A16F-1F39985A6543.pdf",
-                meta: "2 pages · 101 KB · pdf",
-                time: "12:45 PM",
-                status: "sent",
-            });
-
-            history.push({
+        const seedMsgs = isSelf ? [
+            { type: "file", outgoing: true, fileName: "8B0D5E5B-8D90-4916-A16F-1F39985A6543.pdf", meta: "2 pages \u00b7 101 KB \u00b7 pdf", status: "sent" },
+            {
                 type: "image",
                 outgoing: true,
-                imageHtml: `
-                    <div style="background:#fff;padding:14px;font-family:Arial,sans-serif;">
-                        <div style="font-weight:800;font-size:22px;color:#0B2E6B;">DN <span style="color:#0B2E6B;">DIGITAL SERVICES</span></div>
-                        <div style="font-size:10px;color:#0B2E6B;margin-top:2px;">SOLUTIONS · GROWTH · SUCCESS</div>
-                        <div style="margin-top:10px;background:#0B2E6B;color:#fff;text-align:center;padding:6px 0;font-weight:700;font-size:12px;">OUR SERVICES</div>
-                    </div>
-                `,
-                time: "12:55 PM",
+                imageHtml: `<div style="background:#fff;padding:14px;font-family:Arial,sans-serif;"><div style="font-weight:800;font-size:22px;color:#0B2E6B;">DN <span style="color:#0B2E6B;">DIGITAL SERVICES</span></div><div style="font-size:10px;color:#0B2E6B;margin-top:2px;">SOLUTIONS \u00b7 GROWTH \u00b7 SUCCESS</div><div style="margin-top:10px;background:#0B2E6B;color:#fff;text-align:center;padding:6px 0;font-weight:700;font-size:12px;">OUR SERVICES</div></div>`,
                 status: "read",
-            });
+            },
+        ] : [
+            { type: "text", outgoing: false, text: `Hey! This is the start of your conversation with ${name}.` },
+            { type: "text", outgoing: true, text: "Hey, how's it going?", status: "read" },
+        ];
 
-        } else {
-
-            history.push({
-                type: "text",
-                outgoing: false,
-                text: `Hey! This is the start of your conversation with ${name}.`,
-                time: "9:12 AM",
-            });
-
-            history.push({
-                type: "text",
-                outgoing: true,
-                text: "Hey, how's it going?",
-                time: "9:15 AM",
-                status: "read",
-            });
-
+        for(const m of seedMsgs){
+            await addDoc(messagesRef, { ...m, senderId: m.outgoing ? user.uid : "seed", createdAt: serverTimestamp() });
         }
+
+        const last = seedMsgs[seedMsgs.length - 1];
+
+        await updateDoc(chatDocRef, {
+            seeded: true,
+            lastMessage: last.type === "file" ? last.fileName : (last.type === "image" ? "Photo" : last.text),
+            lastMessageType: last.type,
+            updatedAt: serverTimestamp(),
+        });
 
     }
 
-    const pendingRaw = sessionStorage.getItem("oc_pending_message");
+    addSystemNote(ICONS.lock, "Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. <b>Learn more</b>");
+    addSystemNote(ICONS.clock, "You use a default timer for disappearing messages in new chats. New messages will disappear from this chat 90 days after they're sent, except when kept. <b>Change timer</b>", true);
 
-    if(pendingRaw){
+    onSnapshot(query(messagesRef, orderBy("createdAt")), (snap) => {
 
-        try {
+        Array.from(messagesEl.querySelectorAll(".msg-row, .date-divider")).forEach((el) => el.remove());
 
-            const pending = JSON.parse(pendingRaw);
+        addDateDivider("Today");
 
-            if(pending && pending.name === name && Array.isArray(pending.messages)){
+        snap.forEach((docSnap) => {
 
-                pending.messages.forEach((msg) => {
+            const msg = docSnap.data();
+            const time = formatTime(msg.createdAt);
 
-                    const now = new Date();
-                    const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-                    history.push({ type: "text", outgoing: true, text: msg, time, status: "sent" });
-
-                });
-
+            if(msg.type === "file"){
+                addFileMessage({ ...msg, time });
+            } else if(msg.type === "image"){
+                addImageMessage({ ...msg, time });
+            } else {
+                addTextMessage({ ...msg, time });
             }
 
-        } catch(e) {}
+        });
 
-        sessionStorage.removeItem("oc_pending_message");
-
-    }
-
-    saveHistory(history);
-
-    history.forEach((msg) => {
-
-        if(msg.type === "file"){
-            addFileMessage(msg);
-        } else if(msg.type === "image"){
-            addImageMessage(msg);
-        } else {
-            addTextMessage(msg);
-        }
+        scrollToBottom();
 
     });
-
-    scrollToBottom();
 
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -276,30 +254,25 @@ window.addEventListener("load", () => {
 
     messageInput.addEventListener("input", updateSendState);
 
-    function sendMessage(){
+    async function sendTextMessage(){
 
         const value = messageInput.value.trim();
 
         if(!value) return;
 
-        const now = new Date();
-        const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-        addTextMessage({ outgoing: true, text: value, time, status: "sent" });
-
-        history.push({ type: "text", outgoing: true, text: value, time, status: "sent" });
-        saveHistory(history);
-
         messageInput.value = "";
         updateSendState();
-        scrollToBottom();
+
+        await addDoc(messagesRef, { type: "text", outgoing: true, senderId: user.uid, text: value, status: "sent", createdAt: serverTimestamp() });
+
+        await updateDoc(chatDocRef, { lastMessage: value, lastMessageType: "text", updatedAt: serverTimestamp() });
 
     }
 
     sendBtn.addEventListener("click", () => {
 
         if(sendBtn.classList.contains("has-text")){
-            sendMessage();
+            sendTextMessage();
         }
 
     });
@@ -308,17 +281,74 @@ window.addEventListener("load", () => {
 
         if(e.key === "Enter"){
             e.preventDefault();
-            sendMessage();
+            sendTextMessage();
         }
 
     });
 
-    ["attachBtn", "cameraBtn", "stickerBtn"].forEach((id) => {
+    async function sendFile(file, asImage){
 
-        document.getElementById(id).addEventListener("click", () => {
-            messageInput.focus();
-        });
+        if(!file) return;
 
+        const path = `users/${user.uid}/chats/${chatId}/files/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, path);
+
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+
+        if(asImage){
+
+            await addDoc(messagesRef, { type: "image", outgoing: true, senderId: user.uid, fileURL: url, status: "sent", createdAt: serverTimestamp() });
+            await updateDoc(chatDocRef, { lastMessage: "Photo", lastMessageType: "image", updatedAt: serverTimestamp() });
+
+        } else {
+
+            const sizeKb = Math.max(1, Math.round(file.size / 1024));
+
+            await addDoc(messagesRef, { type: "file", outgoing: true, senderId: user.uid, fileName: file.name, fileURL: url, meta: `${sizeKb} KB \u00b7 ${(file.name.split(".").pop() || "file")}`, status: "sent", createdAt: serverTimestamp() });
+            await updateDoc(chatDocRef, { lastMessage: file.name, lastMessageType: "file", updatedAt: serverTimestamp() });
+
+        }
+
+    }
+
+    const attachInput = document.getElementById("attachInput");
+    const cameraInput = document.getElementById("cameraInput");
+
+    document.getElementById("attachBtn").addEventListener("click", () => {
+        attachInput.click();
+    });
+
+    document.getElementById("cameraBtn").addEventListener("click", () => {
+        cameraInput.click();
+    });
+
+    attachInput.addEventListener("change", (e) => {
+
+        const file = e.target.files && e.target.files[0];
+
+        if(file){
+            sendFile(file, file.type.startsWith("image/"));
+        }
+
+        attachInput.value = "";
+
+    });
+
+    cameraInput.addEventListener("change", (e) => {
+
+        const file = e.target.files && e.target.files[0];
+
+        if(file){
+            sendFile(file, true);
+        }
+
+        cameraInput.value = "";
+
+    });
+
+    document.getElementById("stickerBtn").addEventListener("click", () => {
+        messageInput.focus();
     });
 
 });

@@ -1,9 +1,12 @@
-window.addEventListener("load", () => {
+import { db, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, slugify, requireAuthAndOnboarding } from "./firebase.js";
 
-    if(localStorage.getItem("oc_onboarded") !== "true"){
-        window.location.href = "welcome.html";
-        return;
-    }
+window.addEventListener("load", async () => {
+
+    const session = await requireAuthAndOnboarding("welcome.html");
+
+    if(!session) return;
+
+    const { user } = session;
 
     const params = new URLSearchParams(window.location.search);
 
@@ -21,12 +24,10 @@ window.addEventListener("load", () => {
     const QUOTES = [
         { text: "हर बार जवाब देना\nज़रूरी नहीं होता,\nकुछ लोगों को उनकी\nसोच के साथ\nछोड़ देना चाहिए..!!", credit: "@lifeink_quotes", gradient: "linear-gradient(160deg,#3B2A1A,#0F0B08)" },
         { text: "Some bonds are\nquiet, but they run\ndeeper than words\never could.", credit: "@onechat_quotes", gradient: "linear-gradient(160deg,#1F3B36,#0A1512)" },
-        { text: "Chai, sukoon\naur thodi si\nkhamoshi —\nbas yahi chahiye.", credit: "@onechat_quotes", gradient: "linear-gradient(160deg,#2A2140,#0C0A16)" },
+        { text: "Chai, sukoon\naur thodi si\nkhamoshi \u2014\nbas yahi chahiye.", credit: "@onechat_quotes", gradient: "linear-gradient(160deg,#2A2140,#0C0A16)" },
         { text: "Good things take\ntime. Stay patient,\nstay kind.", credit: "@onechat_quotes", gradient: "linear-gradient(160deg,#213A4D,#0A1620)" },
         { text: "Family is not\nan important thing,\nit's everything.", credit: "@onechat_quotes", gradient: "linear-gradient(160deg,#40241F,#150B09)" },
     ];
-
-    const quote = QUOTES[Math.abs(hashCode(name)) % QUOTES.length];
 
     function hashCode(str){
         let hash = 0;
@@ -36,6 +37,8 @@ window.addEventListener("load", () => {
         }
         return hash;
     }
+
+    const quote = QUOTES[Math.abs(hashCode(name)) % QUOTES.length];
 
     document.getElementById("quoteText").textContent = quote.text;
     document.getElementById("quoteCredit").textContent = quote.credit;
@@ -74,32 +77,52 @@ window.addEventListener("load", () => {
 
     });
 
-    function sendReply(){
+    async function sendReply(){
 
         const value = replyInput.value.trim();
 
         if(!value) return;
 
-        const existingRaw = sessionStorage.getItem("oc_pending_message");
-        let messages = [];
-
-        if(existingRaw){
-            try {
-                const existing = JSON.parse(existingRaw);
-                if(existing && existing.name === name && Array.isArray(existing.messages)){
-                    messages = existing.messages;
-                }
-            } catch(e) {}
-        }
-
-        messages.push(value);
-
-        sessionStorage.setItem("oc_pending_message", JSON.stringify({ name, messages }));
-
         replyInput.value = "";
         statusFooter.classList.remove("typing");
         replyInput.placeholder = "Reply sent!";
         setTimeout(() => { replyInput.placeholder = "Reply"; }, 1500);
+
+        // Drop the reply into a chat with this person, creating it if needed,
+        // so it shows up instantly if the user opens that conversation.
+        const chatId = slugify(name);
+        const chatDocRef = doc(db, "users", user.uid, "chats", chatId);
+        const chatSnap = await getDoc(chatDocRef);
+
+        if(!chatSnap.exists()){
+
+            await setDoc(chatDocRef, {
+                id: chatId,
+                name,
+                subtitle: "tap for contact info",
+                type: "text",
+                lastMessage: value,
+                lastMessageType: "text",
+                unreadCount: 0,
+                seeded: true,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+
+        } else {
+
+            await updateDoc(chatDocRef, { lastMessage: value, lastMessageType: "text", updatedAt: serverTimestamp() });
+
+        }
+
+        await addDoc(collection(chatDocRef, "messages"), {
+            type: "text",
+            outgoing: true,
+            senderId: user.uid,
+            text: value,
+            status: "sent",
+            createdAt: serverTimestamp(),
+        });
 
     }
 

@@ -1,12 +1,16 @@
-window.addEventListener("load", () => {
+import { requireAuthAndOnboarding } from "./firebase.js";
 
-    if(localStorage.getItem("oc_onboarded") !== "true"){
-        window.location.href = "welcome.html";
-        return;
-    }
+window.addEventListener("load", async () => {
+
+    const session = await requireAuthAndOnboarding("welcome.html");
+
+    if(!session) return;
+
+    const { profile } = session;
 
     const params = new URLSearchParams(window.location.search);
 
+    const chatId = params.get("chatId") || "self";
     const name = params.get("name") || "OneChat User";
     const isSelf = params.get("self") === "1";
     const numberParam = params.get("number") || "";
@@ -19,7 +23,7 @@ window.addEventListener("load", () => {
     if(isSelf){
 
         numberEl.style.display = "none";
-        statusEl.textContent = localStorage.getItem("oc_about") || "Available";
+        statusEl.textContent = profile.about || "Available";
 
     } else if(numberParam){
 
@@ -38,8 +42,8 @@ window.addEventListener("load", () => {
     const initials = ocGetInitials(name);
 
     if(isSelf){
-        ocApplyAvatar(infoAvatar, initials);
-        ocApplyAvatar(pvPhoto, initials);
+        ocApplyAvatar(infoAvatar, initials, profile.photoURL);
+        ocApplyAvatar(pvPhoto, initials, profile.photoURL);
     } else {
         infoAvatar.textContent = initials;
         pvPhoto.textContent = initials;

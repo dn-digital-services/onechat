@@ -1,3 +1,5 @@
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "./firebase.js";
+
 window.addEventListener("load", () => {
 
     const form = document.getElementById("loginForm");
@@ -6,14 +8,28 @@ window.addEventListener("load", () => {
     const errorMsg = document.getElementById("errorMsg");
     const loginBtn = document.getElementById("loginBtn");
 
+    let recaptchaVerifier = null;
+
+    function getRecaptcha(){
+
+        if(!recaptchaVerifier){
+            recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+        }
+
+        return recaptchaVerifier;
+
+    }
+
     form.addEventListener("submit", (e) => {
 
         e.preventDefault();
 
         errorMsg.textContent = "";
 
-        if(phone.value.trim().length < 3){
-            errorMsg.textContent = "Enter a valid phone number or email.";
+        const rawPhone = phone.value.trim().replace(/[\s()-]/g, "");
+
+        if(!/^\+[1-9]\d{6,14}$/.test(rawPhone)){
+            errorMsg.textContent = "Enter a valid phone number with country code (e.g. +15551234567).";
             return;
         }
 
@@ -25,11 +41,33 @@ window.addEventListener("load", () => {
         loginBtn.disabled = true;
         loginBtn.textContent = "Sending code...";
 
-        localStorage.setItem("oc_identifier", phone.value.trim());
+        signInWithPhoneNumber(auth, rawPhone, getRecaptcha())
+            .then((confirmationResult) => {
 
-        setTimeout(() => {
-            window.location.href = "otp.html";
-        }, 700);
+                sessionStorage.setItem("oc_verification_id", confirmationResult.verificationId);
+                sessionStorage.setItem("oc_phone", rawPhone);
+
+                window.location.href = "otp.html";
+
+            })
+            .catch((err) => {
+
+                console.error("Phone sign-in failed:", err);
+
+                if(err && err.code === "auth/invalid-phone-number"){
+                    errorMsg.textContent = "That phone number looks invalid.";
+                } else if(err && err.code === "auth/too-many-requests"){
+                    errorMsg.textContent = "Too many attempts. Please try again later.";
+                } else {
+                    errorMsg.textContent = "Couldn't send the code. Please try again.";
+                }
+
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Continue";
+
+                recaptchaVerifier = null;
+
+            });
 
     });
 

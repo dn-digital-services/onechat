@@ -1,16 +1,58 @@
-window.addEventListener("load", () => {
+import {
+    db,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp,
+    requireAuthAndOnboarding,
+} from "./firebase.js";
 
-    if(localStorage.getItem("oc_onboarded") !== "true"){
-        window.location.href = "welcome.html";
-        return;
-    }
+const SEED_CONVERSATIONS = [
+    { id: "self", name: "You", subtitle: "Message yourself", type: "text", lastMessage: "Business card.png", lastMessageType: "file", unreadCount: 0, self: true },
+    { id: "ava-thompson", name: "Ava Thompson", subtitle: "tap for contact info", type: "call", lastMessage: "Video call", lastMessageType: "call", unreadCount: 2, favourite: true },
+    { id: "liam-chen", name: "Liam Chen", subtitle: "tap for contact info", type: "text", lastMessage: "Sent the files, check your inbox", lastMessageType: "text", unreadCount: 0, read: true },
+    { id: "onechat-team", name: "OneChat Team", subtitle: "tap for group info", type: "text", lastMessage: "Welcome to OneChat! \uD83C\uDF89", lastMessageType: "text", unreadCount: 1, group: true },
+    { id: "design-squad", name: "Design Squad", subtitle: "tap for group info", type: "photo", lastMessage: "Photo", lastMessageType: "image", unreadCount: 0, read: true, group: true },
+    { id: "maya-patel", name: "Maya Patel", subtitle: "tap for contact info", type: "text", lastMessage: "Sounds good, talk soon!", lastMessageType: "text", unreadCount: 0, read: true, favourite: true },
+    { id: "noah-rivera", name: "Noah Rivera", subtitle: "tap for contact info", type: "text", lastMessage: "Can you call me later?", lastMessageType: "text", unreadCount: 0 },
+];
 
-    const identifier = localStorage.getItem("oc_identifier");
+window.addEventListener("load", async () => {
+
+    const session = await requireAuthAndOnboarding("welcome.html");
+
+    if(!session) return;
+
+    const { user, profile } = session;
+
     const navAvatar = document.getElementById("navAvatar");
+    const displayName = profile.displayName || "OneChat User";
+    ocApplyAvatar(navAvatar, ocGetInitials(displayName), profile.photoURL);
 
-    if(identifier){
-        const initials = identifier.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "OC";
-        navAvatar.textContent = initials;
+    const chatsCol = collection(db, "users", user.uid, "chats");
+
+    // Seed the demo conversation list once, in reverse so "You" ends up most recent.
+    const firstChatSnap = await getDoc(doc(chatsCol, "self"));
+
+    if(!firstChatSnap.exists()){
+
+        for(let i = SEED_CONVERSATIONS.length - 1; i >= 0; i--){
+
+            const seed = SEED_CONVERSATIONS[i];
+
+            await setDoc(doc(chatsCol, seed.id), {
+                ...seed,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                seeded: false,
+            });
+
+        }
+
     }
 
     const chatList = document.getElementById("chatList");
@@ -25,45 +67,42 @@ window.addEventListener("load", () => {
 
     };
 
-    const conversations = [
-        { name: "You", subtitle: "Message yourself", type: "text", message: "Business card.png", time: "12:55 PM", unread: 0, self: true },
-        { name: "Ava Thompson", type: "call", message: "Video call", time: "Yesterday", unread: 2, favourite: true },
-        { name: "Liam Chen", type: "text", message: "Sent the files, check your inbox", time: "Yesterday", unread: 0, read: true },
-        { name: "OneChat Team", type: "text", message: "Welcome to OneChat! 🎉", time: "Yesterday", unread: 1, group: true },
-        { name: "Design Squad", type: "photo", message: "Photo", time: "Yesterday", unread: 0, read: true, group: true },
-        { name: "Maya Patel", type: "text", message: "Sounds good, talk soon!", time: "Sunday", unread: 0, read: true, favourite: true },
-        { name: "Noah Rivera", type: "text", message: "Can you call me later?", time: "Sunday", unread: 0 },
-    ];
+    let allConversations = [];
+    let activeFilter = "all";
 
-    const totalUnread = conversations.reduce((sum, c) => sum + (c.unread || 0), 0);
+    function formatTime(ts){
 
-    function getLastMessage(name){
+        if(!ts) return "";
 
-        try {
+        const date = ts.toDate ? ts.toDate() : new Date(ts);
+        const now = new Date();
 
-            const raw = localStorage.getItem(`oc_chat_history_${name}`);
+        const sameDay = date.toDateString() === now.toDateString();
 
-            if(!raw) return null;
-
-            const history = JSON.parse(raw);
-
-            if(!Array.isArray(history) || history.length === 0) return null;
-
-            return history[history.length - 1];
-
-        } catch(e) {
-            return null;
+        if(sameDay){
+            return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
         }
+
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+
+        if(date.toDateString() === yesterday.toDateString()){
+            return "Yesterday";
+        }
+
+        return date.toLocaleDateString([], { weekday: "short" });
 
     }
 
     function renderList(filter){
 
+        activeFilter = filter;
+
         chatList.innerHTML = "";
 
-        const filtered = conversations.filter((c) => {
+        const filtered = allConversations.filter((c) => {
 
-            if(filter === "unread") return c.unread > 0;
+            if(filter === "unread") return c.unreadCount > 0;
             if(filter === "favourites") return !!c.favourite;
             if(filter === "groups") return !!c.group;
             return true;
@@ -77,34 +116,17 @@ window.addEventListener("load", () => {
 
         filtered.forEach((c) => {
 
-            const initials = c.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+            const chatName = c.self ? `${displayName} (You)` : c.name;
+            const initials = ocGetInitials(c.self ? displayName : c.name);
 
             let previewIcon = "";
-            let msgClass = c.unread > 0 ? "bold" : "";
-            let message = c.message;
-            let time = c.time;
-            let isRead = c.read;
+            const msgClass = c.unreadCount > 0 ? "bold" : "";
+            const message = c.lastMessageType === "file" ? (c.lastMessage || "Document") : (c.lastMessageType === "image" ? "Photo" : c.lastMessage);
+            const time = formatTime(c.updatedAt);
+            const isRead = c.lastMessageType === "text" ? true : c.read;
 
-            const chatName = c.self ? (localStorage.getItem("oc_identifier") ? `${localStorage.getItem("oc_identifier")} (You)` : "You") : c.name;
-            const lastMsg = getLastMessage(chatName);
-
-            if(lastMsg){
-
-                time = lastMsg.time;
-                isRead = lastMsg.status === "read" || (lastMsg.outgoing && lastMsg.status !== undefined);
-
-                if(lastMsg.type === "file"){
-                    message = lastMsg.fileName || "Document";
-                } else if(lastMsg.type === "image"){
-                    message = "Photo";
-                } else {
-                    message = lastMsg.text;
-                }
-
-            }
-
-            if(c.type === "call") previewIcon = ICONS.videoCall;
-            else if(!lastMsg && c.type === "photo") previewIcon = ICONS.photo;
+            if(c.lastMessageType === "call") previewIcon = ICONS.videoCall;
+            else if(c.lastMessageType === "image" && !c.seeded) previewIcon = ICONS.photo;
             else if(isRead) previewIcon = ICONS.checkRead;
 
             const item = document.createElement("div");
@@ -115,14 +137,14 @@ window.addEventListener("load", () => {
                 <div class="chat-info">
                     <div class="chat-top">
                         <h3>${c.name}</h3>
-                        <span class="chat-time ${c.unread > 0 ? "unread-time" : ""}">${time}</span>
+                        <span class="chat-time ${c.unreadCount > 0 ? "unread-time" : ""}">${time}</span>
                     </div>
                     <div class="chat-preview">
                         <span class="chat-preview-text">
                             ${previewIcon}
                             <span class="msg-text ${msgClass}">${message}</span>
                         </span>
-                        ${c.unread > 0 ? `<span class="unread-badge">${c.unread}</span>` : ""}
+                        ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ""}
                     </div>
                 </div>
             `;
@@ -130,9 +152,9 @@ window.addEventListener("load", () => {
             item.addEventListener("click", () => {
 
                 const query = new URLSearchParams({
-                    name: c.self ? (localStorage.getItem("oc_identifier") ? `${localStorage.getItem("oc_identifier")} (You)` : "You") : c.name,
-                    subtitle: c.self ? "Message yourself" : (c.group ? "tap for group info" : "tap for contact info"),
-                    unread: totalUnread,
+                    chatId: c.id,
+                    name: chatName,
+                    subtitle: c.subtitle || "tap for contact info",
                 });
 
                 if(c.self) query.set("self", "1");
@@ -147,7 +169,13 @@ window.addEventListener("load", () => {
 
     }
 
-    renderList("all");
+    onSnapshot(query(chatsCol, orderBy("updatedAt", "desc")), (snap) => {
+
+        allConversations = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        renderList(activeFilter);
+
+    });
 
     document.querySelectorAll(".chip[data-filter]").forEach((chip) => {
 

@@ -25,7 +25,19 @@ OneChat is a static HTML/CSS/JS front-end prototype for a messaging app. There i
 Shared styles: `variables.css` (design tokens), `global.css` (reset), `responsive.css`, `animations.css`. Each screen also has its own `<name>.css` and `<name>.js`. `app.js` is a shared script include (currently empty, kept for consistency with the original file layout).
 
 ## Running
-Static files are served by `server.js` (plain Node `http` server, no dependencies) on port 5000, bound via the `Start application` workflow (`node server.js`).
+Static files are served by `server.js` (plain Node `http` server, no dependencies) on port 5000, bound via the `Start application` workflow (`node server.js`). `server.js` also has one dynamic route, `/firebase-config.js`, which reads the `FIREBASE_*` env vars at request time and emits them as an ES module.
+
+## Backend: Firebase
+The app now uses a real Firebase project (client SDK only, no server-side Admin SDK) for auth, data and file storage. Firebase is loaded via CDN ES modules (`https://www.gstatic.com/firebasejs/10.13.0/...`), initialized once in `firebase.js`, and imported by every page script (each page's `<script>` tag is now `type="module"`).
+
+- **Auth**: Phone number + SMS OTP via Firebase Authentication (`signInWithPhoneNumber` + invisible reCAPTCHA in `login.js`, `PhoneAuthProvider.credential` + `signInWithCredential` in `otp.js`). The `verificationId` is handed off between `login.html` and `otp.html` via `sessionStorage` (the confirmation object itself can't survive a full page navigation). The password field on `login.html` is kept for UI parity but isn't sent to Firebase — phone auth doesn't use passwords.
+  - **UI exception**: the OTP screen was changed from 4 boxes to 6, because Firebase's SMS codes are always 6 digits — 4 boxes made verification impossible. This is the one visual deviation from the original design.
+  - Google's reCAPTCHA badge will appear on the login screen; this is required by Firebase phone auth and can't be removed while using it.
+- **Firestore**: all data lives under `users/{uid}/...` so per-user Firestore rules stay simple (see `firestore.rules`). `users/{uid}` holds profile fields (`displayName`, `username`, `phone`, `about`, `links`, `photoURL`, `onboarded`, `permissions`). `users/{uid}/chats/{chatId}` holds each conversation's summary (`lastMessage`, `updatedAt`, `unreadCount`, etc.) and `users/{uid}/chats/{chatId}/messages/{msgId}` holds the message log. `home.js` and `chat.js` render live via `onSnapshot` — no polling, no manual refresh, matches the "instant update" requirement.
+- **Storage**: profile photos (`myprofile.js`) and chat attachments (`chat.js`) upload to Firebase Storage under `users/{uid}/...` and store the resulting download URL in Firestore.
+- **Contacts caveat**: this prototype never had a real contacts/friends system — the conversation list (Ava Thompson, Liam Chen, etc.) and the Updates list (Rahul Bro, etc.) are still fixed demo names, not real second Firebase accounts. They're seeded into each signed-in user's own `users/{uid}/chats` on first login so persistence/realtime is genuinely backed by Firestore (e.g. multi-tab/multi-device sync of your own message history), but you're always messaging into your own data, not a second real person. Adding real multi-user contacts would be a separate feature.
+- **Security rules**: `firestore.rules` and `storage.rules` are included in the repo but were not deployed (no Firebase CLI credentials in this environment). Paste them into the Firebase console — Firestore Database → Rules, and Storage → Rules — to enforce the per-user access model.
+- **Firebase console setup required**: enable "Phone" as a sign-in provider under Authentication → Sign-in method, and add this Repl's domain (and your published domain once deployed) under Authentication → Settings → Authorized domains, or phone sign-in will fail.
 
 ## User preferences
 None recorded yet.

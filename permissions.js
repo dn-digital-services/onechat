@@ -1,9 +1,23 @@
-window.addEventListener("load", () => {
+import { db, doc, setDoc, waitForAuthUser } from "./firebase.js";
+
+window.addEventListener("load", async () => {
+
+    const user = await waitForAuthUser();
+
+    if(!user){
+        window.location.href = "welcome.html";
+        return;
+    }
 
     const continueBtn = document.getElementById("continueBtn");
     const skipLink = document.getElementById("skipLink");
 
-    function saveAndGo(){
+    let saving = false;
+
+    async function saveAndGo(){
+
+        if(saving) return;
+        saving = true;
 
         const permissions = {};
 
@@ -16,10 +30,24 @@ window.addEventListener("load", () => {
 
         });
 
-        localStorage.setItem("oc_permissions", JSON.stringify(permissions));
-        localStorage.setItem("oc_onboarded", "true");
+        continueBtn.disabled = true;
 
-        window.location.href = "home.html";
+        try {
+
+            await setDoc(doc(db, "users", user.uid), {
+                permissions,
+                onboarded: true,
+            }, { merge: true });
+
+            window.location.href = "home.html";
+
+        } catch(e) {
+
+            console.error("Failed to save permissions:", e);
+            continueBtn.disabled = false;
+            saving = false;
+
+        }
 
     }
 

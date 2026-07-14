@@ -72,14 +72,14 @@ Version : 1.0
 
     justify-content:center;
 
-    gap:14px;
+    gap:8px;
 
 }
 
 .otp-box{
 
-    width:60px;
-    height:64px;
+    width:46px;
+    height:56px;
 
     text-align:center;
 
@@ -189,12 +189,13 @@ Version : 1.0
 @media (max-width:360px){
 
     .otp-box{
-        width:52px;
-        height:58px;
+        width:38px;
+        height:48px;
+        font-size:20px;
     }
 
     .otp-inputs{
-        gap:10px;
+        gap:6px;
     }
 
 }

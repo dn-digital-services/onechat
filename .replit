@@ -32,3 +32,13 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+FIREBASE_API_KEY = "AIzaSyCFkSihHWabFfNVsL--854mXUcokCSAE7k"
+FIREBASE_AUTH_DOMAIN = "one-chat-connect.firebaseapp.com"
+FIREBASE_PROJECT_ID = "one-chat-connect"
+FIREBASE_STORAGE_BUCKET = "one-chat-connect.firebasestorage.app"
+FIREBASE_MESSAGING_SENDER_ID = "331276638740"
+FIREBASE_APP_ID = "1:331276638740:web:b5ef67ad5bec782bffe501"

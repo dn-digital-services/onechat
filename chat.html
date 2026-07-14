@@ -50,6 +50,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
 
+        <input type="file" id="attachInput" hidden>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+
         <div class="text-field">
 
             <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
@@ -78,7 +81,7 @@
 </div>
 
 <script src="app.js"></script>
-<script src="chat.js"></script>
+<script type="module" src="chat.js"></script>
 
 </body>
 

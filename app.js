@@ -15,21 +15,13 @@ function ocGetInitials(text){
 
 }
 
-function ocGetDisplayName(){
-
-    return localStorage.getItem("oc_name") || "OneChat User";
-
-}
-
-function ocApplyAvatar(el, initials){
+function ocApplyAvatar(el, initials, photoURL){
 
     if(!el) return;
 
-    const url = localStorage.getItem("oc_avatar");
+    if(photoURL){
 
-    if(url){
-
-        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundImage = `url(${photoURL})`;
         el.style.backgroundSize = "cover";
         el.style.backgroundPosition = "center";
 

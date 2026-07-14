@@ -1,16 +1,14 @@
-window.addEventListener("load", () => {
+import { requireAuthAndOnboarding } from "./firebase.js";
 
-    if(localStorage.getItem("oc_onboarded") !== "true"){
-        window.location.href = "welcome.html";
-        return;
-    }
+window.addEventListener("load", async () => {
 
-    const identifier = localStorage.getItem("oc_identifier");
+    const session = await requireAuthAndOnboarding("welcome.html");
+
+    if(!session) return;
+
+    const { profile } = session;
+
     const navAvatar = document.getElementById("navAvatar");
-
-    if(identifier){
-        const initials = identifier.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "OC";
-        navAvatar.textContent = initials;
-    }
+    ocApplyAvatar(navAvatar, ocGetInitials(profile.displayName || "OneChat User"), profile.photoURL);
 
 });

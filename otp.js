@@ -1,3 +1,5 @@
+import { auth, db, doc, getDoc, setDoc, PhoneAuthProvider, signInWithCredential, serverTimestamp } from "./firebase.js";
+
 window.addEventListener("load", () => {
 
     const identifierText = document.getElementById("identifierText");
@@ -8,10 +10,16 @@ window.addEventListener("load", () => {
     const resendLink = document.getElementById("resendLink");
     const resendTimer = document.getElementById("resendTimer");
 
-    const identifier = localStorage.getItem("oc_identifier");
+    const phone = sessionStorage.getItem("oc_phone");
+    const verificationId = sessionStorage.getItem("oc_verification_id");
 
-    if(identifier){
-        identifierText.textContent = identifier;
+    if(!verificationId){
+        window.location.href = "login.html";
+        return;
+    }
+
+    if(phone){
+        identifierText.textContent = phone;
     }
 
     boxes.forEach((box, i) => {
@@ -74,12 +82,9 @@ window.addEventListener("load", () => {
 
         if(resendLink.classList.contains("disabled")) return;
 
-        seconds = 30;
-
-        boxes.forEach((b) => b.value = "");
-        boxes[0].focus();
-
-        startTimer();
+        // Re-sending requires a fresh reCAPTCHA challenge, so send the user
+        // back to the login screen to request a new code.
+        window.location.href = "login.html";
 
     });
 
@@ -91,19 +96,50 @@ window.addEventListener("load", () => {
 
         errorMsg.textContent = "";
 
-        if(code.length < 4){
-            errorMsg.textContent = "Enter the 4-digit code.";
+        if(code.length < boxes.length){
+            errorMsg.textContent = `Enter the ${boxes.length}-digit code.`;
             return;
         }
 
         verifyBtn.disabled = true;
         verifyBtn.textContent = "Verifying...";
 
-        localStorage.setItem("oc_verified", "true");
+        const credential = PhoneAuthProvider.credential(verificationId, code);
 
-        setTimeout(() => {
-            window.location.href = "permissions.html";
-        }, 600);
+        signInWithCredential(auth, credential)
+            .then(async (result) => {
+
+                const userRef = doc(db, "users", result.user.uid);
+                const snap = await getDoc(userRef);
+
+                if(!snap.exists()){
+
+                    await setDoc(userRef, {
+                        phone: phone || result.user.phoneNumber || "",
+                        displayName: "OneChat User",
+                        about: "Available",
+                        onboarded: false,
+                        createdAt: serverTimestamp(),
+                    });
+
+                }
+
+                sessionStorage.removeItem("oc_verification_id");
+                sessionStorage.removeItem("oc_phone");
+
+                window.location.href = "permissions.html";
+
+            })
+            .catch((err) => {
+
+                console.error("OTP verification failed:", err);
+
+                errorMsg.textContent = "Invalid code. Please try again.";
+
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = "Verify";
+
+            });
 
     });
 

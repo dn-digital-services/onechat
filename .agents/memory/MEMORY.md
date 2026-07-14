@@ -1,0 +1,1 @@
+- [Firebase phone auth on static multi-page sites](firebase-phone-auth-static-site.md) — verificationId must be handed off via sessionStorage across page navigations; SMS codes are always 6 digits.
