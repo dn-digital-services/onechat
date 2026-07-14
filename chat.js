@@ -193,6 +193,29 @@ window.addEventListener("load", () => {
 
     }
 
+    const pendingRaw = sessionStorage.getItem("oc_pending_message");
+
+    if(pendingRaw){
+
+        try {
+
+            const pending = JSON.parse(pendingRaw);
+
+            if(pending && pending.name === name && pending.message){
+
+                const now = new Date();
+                const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+                addTextMessage({ outgoing: true, text: pending.message, time, status: "sent" });
+
+            }
+
+        } catch(e) {}
+
+        sessionStorage.removeItem("oc_pending_message");
+
+    }
+
     scrollToBottom();
 
     const messageInput = document.getElementById("messageInput");

@@ -61,13 +61,40 @@ window.addEventListener("load", () => {
     });
 
     const replyInput = document.getElementById("replyInput");
+    const statusFooter = document.querySelector(".status-footer");
+    const svSendBtn = document.getElementById("svSendBtn");
+
+    replyInput.addEventListener("input", () => {
+
+        if(replyInput.value.trim().length > 0){
+            statusFooter.classList.add("typing");
+        } else {
+            statusFooter.classList.remove("typing");
+        }
+
+    });
+
+    function sendReply(){
+
+        const value = replyInput.value.trim();
+
+        if(!value) return;
+
+        sessionStorage.setItem("oc_pending_message", JSON.stringify({ name, message: value }));
+
+        const query = new URLSearchParams({ name });
+
+        window.location.href = `chat.html?${query.toString()}`;
+
+    }
+
+    svSendBtn.addEventListener("click", sendReply);
 
     replyInput.addEventListener("keydown", (e) => {
 
         if(e.key === "Enter" && replyInput.value.trim()){
-            replyInput.value = "";
-            replyInput.placeholder = "Reply sent!";
-            setTimeout(() => { replyInput.placeholder = "Reply"; }, 1500);
+            e.preventDefault();
+            sendReply();
         }
 
     });
