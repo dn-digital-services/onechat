@@ -118,9 +118,11 @@ window.addEventListener("load", () => {
         const row = document.createElement("div");
         row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
 
+        const timeLabel = `${time}${outgoing ? " \u2713\u2713" : ""}`;
+
         row.innerHTML = `
             <div class="bubble text">
-                ${escapeHtml(text)}
+                <span class="msg-body">${escapeHtml(text)}<span class="time-spacer">${timeLabel}</span></span>
                 <span class="bubble-time">${time} ${outgoing ? (status === "read" ? `<span class="tick-read">${ICONS.readTicks}</span>` : ICONS.sentTick) : ""}</span>
             </div>
         `;

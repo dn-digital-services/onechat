@@ -405,7 +405,29 @@ Version : 1.0
 
 .bubble.text{
 
-    padding:8px 10px 20px;
+    padding:8px 10px 18px;
+
+}
+
+.msg-body{
+
+    display:inline;
+
+    white-space:pre-wrap;
+
+}
+
+.time-spacer{
+
+    display:inline-block;
+
+    visibility:hidden;
+
+    font-size:11px;
+
+    margin-left:6px;
+
+    white-space:nowrap;
 
 }
 
