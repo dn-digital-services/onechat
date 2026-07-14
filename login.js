@@ -79,19 +79,31 @@ window.addEventListener("load", () => {
                 console.error("Phone sign-in failed:", err);
 
                 const code = (err && err.code) || "unknown";
+                const detail = (err && err.message) || String(err);
 
                 if(code === "auth/invalid-phone-number"){
                     errorMsg.textContent = "That phone number looks invalid.";
                 } else if(code === "auth/too-many-requests"){
                     errorMsg.textContent = "Too many attempts. Please try again later.";
                 } else {
-                    // Surface the exact Firebase error code so it's visible without
+                    // Surface the exact Firebase error code/message so it's visible without
                     // needing devtools open (useful on mobile where console access is limited).
-                    errorMsg.textContent = `Couldn't send the code (${code}). Please try again.`;
+                    errorMsg.textContent = `Couldn't send the code (${code}): ${detail}`;
                 }
 
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Continue";
+
+                // A failed attempt can leave a stale reCAPTCHA widget rendered in the
+                // container; clear it so the next attempt can render a fresh one instead
+                // of throwing "reCAPTCHA has already been rendered in this element".
+                if(recaptchaVerifier){
+                    try {
+                        recaptchaVerifier.clear();
+                    } catch(clearErr) {
+                        console.warn("Failed to clear reCAPTCHA:", clearErr);
+                    }
+                }
 
                 recaptchaVerifier = null;
 
