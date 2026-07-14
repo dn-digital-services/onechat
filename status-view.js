@@ -80,11 +80,26 @@ window.addEventListener("load", () => {
 
         if(!value) return;
 
-        sessionStorage.setItem("oc_pending_message", JSON.stringify({ name, message: value }));
+        const existingRaw = sessionStorage.getItem("oc_pending_message");
+        let messages = [];
 
-        const query = new URLSearchParams({ name });
+        if(existingRaw){
+            try {
+                const existing = JSON.parse(existingRaw);
+                if(existing && existing.name === name && Array.isArray(existing.messages)){
+                    messages = existing.messages;
+                }
+            } catch(e) {}
+        }
 
-        window.location.href = `chat.html?${query.toString()}`;
+        messages.push(value);
+
+        sessionStorage.setItem("oc_pending_message", JSON.stringify({ name, messages }));
+
+        replyInput.value = "";
+        statusFooter.classList.remove("typing");
+        replyInput.placeholder = "Reply sent!";
+        setTimeout(() => { replyInput.placeholder = "Reply"; }, 1500);
 
     }
 

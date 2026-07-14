@@ -201,12 +201,16 @@ window.addEventListener("load", () => {
 
             const pending = JSON.parse(pendingRaw);
 
-            if(pending && pending.name === name && pending.message){
+            if(pending && pending.name === name && Array.isArray(pending.messages)){
 
-                const now = new Date();
-                const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                pending.messages.forEach((msg) => {
 
-                addTextMessage({ outgoing: true, text: pending.message, time, status: "sent" });
+                    const now = new Date();
+                    const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+                    addTextMessage({ outgoing: true, text: msg, time, status: "sent" });
+
+                });
 
             }
 
