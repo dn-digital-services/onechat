@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Contact info | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="contact-info.css">
+
+</head>
+
+<body>
+
+<div class="info-screen">
+
+    <header class="info-header">
+
+        <button class="back-btn" id="backBtn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <h1>Contact info</h1>
+
+        <button class="edit-btn" id="editBtn">Edit</button>
+
+    </header>
+
+    <main class="info-body">
+
+        <div class="info-profile">
+
+            <div class="info-avatar" id="infoAvatar">OC</div>
+
+            <h2 id="infoName">Wifey</h2>
+            <p id="infoNumber">+91 70098 08061</p>
+            <p id="infoStatus">Available</p>
+
+        </div>
+
+        <div class="quick-actions">
+
+            <button class="quick-action" id="audioBtn">
+                <span class="quick-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.9a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2.1z"/></svg>
+                </span>
+                <span>Audio</span>
+            </button>
+
+            <button class="quick-action" id="videoBtn">
+                <span class="quick-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                </span>
+                <span>Video</span>
+            </button>
+
+        </div>
+
+        <div class="info-group">
+
+            <button class="info-row" id="mediaRow">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </span>
+                <span class="row-label">Media, links and docs</span>
+                <span class="row-value" id="mediaCount">571</span>
+                <span class="row-chevron">›</span>
+            </button>
+
+            <button class="info-row" id="storageRow">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+                </span>
+                <span class="row-label">Manage storage</span>
+                <span class="row-value">594.6 MB</span>
+                <span class="row-chevron">›</span>
+            </button>
+
+        </div>
+
+        <div class="info-group">
+
+            <button class="info-row" id="notificationsRow">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </span>
+                <span class="row-label">Notifications</span>
+                <span class="row-chevron">›</span>
+            </button>
+
+            <button class="info-row" id="themeRow">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-4 4 4 0 0 1-4-4 4 4 0 0 1-1-2z"/></svg>
+                </span>
+                <span class="row-label">Chat theme</span>
+                <span class="row-chevron">›</span>
+            </button>
+
+        </div>
+
+        <div class="info-group">
+
+            <button class="info-row" id="disappearingRow">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+                <span class="row-label">Disappearing messages</span>
+                <span class="row-value">Off</span>
+                <span class="row-chevron">›</span>
+            </button>
+
+            <div class="info-row toggle-row">
+                <span class="row-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                </span>
+                <span class="row-label">
+                    Lock chat
+                    <span class="row-sublabel">Lock and hide this chat on this device.</span>
+                </span>
+                <label class="switch">
+                    <input type="checkbox" id="lockToggle">
+                    <span class="switch-track"></span>
+                </label>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="app.js"></script>
+<script src="contact-info.js"></script>
+
+</body>
+
+</html>

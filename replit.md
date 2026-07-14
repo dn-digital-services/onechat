@@ -14,7 +14,8 @@ OneChat is a static HTML/CSS/JS front-end prototype for a messaging app. There i
 - `calls.html` — dark call log screen (Call/Schedule/Keypad/Favourites quick actions + recent calls with incoming/outgoing/missed icons), same guard/bottom nav
 - `communities.html` — dark empty-state screen ("New community" CTA, illustration), same guard/bottom nav
 - `home.html` — dark WhatsApp-style chat list (search, filter chips, mock conversations) + bottom nav (guarded: redirects to `welcome.html` if onboarding not completed); clicking a conversation opens `chat.html`
-- `chat.html` — individual chat conversation screen (header with back+unread badge, avatar, encryption/disappearing-message notices, text/file/image message bubbles, working message input that sends new outgoing text bubbles and toggles mic→send icon while typing)
+- `chat.html` — individual chat conversation screen (header with back+unread badge, avatar, encryption/disappearing-message notices, text/file/image message bubbles, working message input that sends new outgoing text bubbles and toggles mic→send icon while typing); tapping the header name/avatar opens `contact-info.html`
+- `contact-info.html` — "Contact info" screen (avatar, name, number/status, Audio + Video quick actions only, Media/links/docs, Manage storage, Notifications, Chat theme, Disappearing messages, and a working Lock chat toggle)
 - `myprofile.html` — editable "Profile" screen reached by tapping the profile card on `profile.html`; lets the user change their photo (via device file/camera picker, stored as a data URL in `localStorage`), display name, username, and links
 - `profile.html` — dark settings screen (Account, Privacy, Chats, Appearance, Notifications, Payments, Storage and data, Help and feedback, Invite a friend, Accounts Centre) + logout, same guard/bottom nav
 

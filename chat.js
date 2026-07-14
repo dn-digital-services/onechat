@@ -36,8 +36,16 @@ window.addEventListener("load", () => {
         window.location.href = "home.html";
     });
 
+    document.getElementById("chatAvatar").parentElement.style.cursor = "pointer";
+
     document.getElementById("chatTitleBtn").addEventListener("click", () => {
-        window.location.href = "profile.html";
+
+        const query = new URLSearchParams({ name, subtitle });
+
+        if(isSelf) query.set("self", "1");
+
+        window.location.href = `contact-info.html?${query.toString()}`;
+
     });
 
     const messagesEl = document.getElementById("chatMessages");
