@@ -1,4 +1,4 @@
-import { auth, db, doc, getDoc, setDoc, PhoneAuthProvider, signInWithCredential, serverTimestamp } from "./firebase.js";
+import { auth, PhoneAuthProvider, signInWithCredential, ensureUserProfile } from "./firebase.js";
 
 window.addEventListener("load", () => {
 
@@ -109,20 +109,7 @@ window.addEventListener("load", () => {
         signInWithCredential(auth, credential)
             .then(async (result) => {
 
-                const userRef = doc(db, "users", result.user.uid);
-                const snap = await getDoc(userRef);
-
-                if(!snap.exists()){
-
-                    await setDoc(userRef, {
-                        phone: phone || result.user.phoneNumber || "",
-                        displayName: "OneChat User",
-                        about: "Available",
-                        onboarded: false,
-                        createdAt: serverTimestamp(),
-                    });
-
-                }
+                await ensureUserProfile(result.user, { phone: phone || result.user.phoneNumber || "" });
 
                 sessionStorage.removeItem("oc_verification_id");
                 sessionStorage.removeItem("oc_phone");

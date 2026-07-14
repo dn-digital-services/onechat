@@ -34,33 +34,59 @@
 
     </div>
 
-    <form id="loginForm" class="middle-section">
+    <form id="phoneLoginForm" class="middle-section">
 
         <div class="input-group">
-            <label for="phone">Phone number or email</label>
+            <label for="phone">Phone number</label>
+            <div class="phone-input-row">
+                <span class="country-code">+91</span>
+                <input
+                type="tel"
+                id="phone"
+                placeholder="98765 43210"
+                inputmode="numeric"
+                maxlength="10"
+                required
+                autocomplete="tel-national">
+            </div>
+        </div>
+
+        <p id="errorMsg" class="error-msg"></p>
+
+        <button type="submit" id="loginBtn">Continue</button>
+
+        <a href="#" class="alt-login-link" id="showEmailLogin">Log in with email instead</a>
+
+    </form>
+
+    <form id="emailLoginForm" class="middle-section hidden">
+
+        <div class="input-group">
+            <label for="email">Email</label>
             <input
-            type="text"
-            id="phone"
-            placeholder="e.g. +1 555 123 4567"
+            type="email"
+            id="email"
+            placeholder="you@example.com"
             required
             autocomplete="username">
         </div>
 
         <div class="input-group">
-            <label for="password">Password</label>
+            <label for="emailPassword">Password</label>
             <input
             type="password"
-            id="password"
+            id="emailPassword"
             placeholder="Enter your password"
             required
+            minlength="6"
             autocomplete="current-password">
         </div>
 
-        <p id="errorMsg" class="error-msg"></p>
+        <p id="emailErrorMsg" class="error-msg"></p>
 
-        <a href="#" class="forgot-link">Forgot password?</a>
+        <button type="submit" id="emailLoginBtn">Continue</button>
 
-        <button type="submit" id="loginBtn">Continue</button>
+        <a href="#" class="alt-login-link" id="showPhoneLogin">Log in with phone instead</a>
 
     </form>
 

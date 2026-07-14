@@ -117,6 +117,97 @@ Version : 1.0
 
 }
 
+.middle-section.hidden{
+
+    display:none;
+
+}
+
+.phone-input-row{
+
+    display:flex;
+    align-items:center;
+
+    height:var(--input-height);
+
+    border:1.5px solid var(--border-color);
+
+    border-radius:var(--radius-small);
+
+    background:var(--surface-color);
+
+    transition:var(--transition-fast);
+
+    overflow:hidden;
+
+}
+
+.phone-input-row:focus-within{
+
+    border-color:var(--primary-color);
+
+    background:var(--background-color);
+
+}
+
+.country-code{
+
+    padding:0 12px;
+
+    height:100%;
+
+    display:flex;
+    align-items:center;
+
+    font-size:var(--font-md);
+
+    color:var(--text-primary);
+
+    font-weight:600;
+
+    border-right:1.5px solid var(--border-color);
+
+}
+
+.phone-input-row input{
+
+    flex:1;
+
+    height:100%;
+
+    border:none;
+    background:transparent;
+
+    padding:0 16px;
+
+    font-size:var(--font-md);
+
+    color:var(--text-primary);
+
+}
+
+.phone-input-row input:focus{
+
+    outline:none;
+
+}
+
+.alt-login-link{
+
+    display:block;
+
+    text-align:center;
+
+    margin-top:18px;
+
+    color:var(--primary-color);
+
+    font-size:var(--font-sm);
+
+    font-weight:600;
+
+}
+
 .error-msg{
 
     min-height:18px;
