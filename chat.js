@@ -153,43 +153,70 @@ window.addEventListener("load", () => {
     addSystemNote(ICONS.clock, "You use a default timer for disappearing messages in new chats. New messages will disappear from this chat 90 days after they're sent, except when kept. <b>Change timer</b>", true);
     addDateDivider("Today");
 
-    if(isSelf){
+    const historyKey = `oc_chat_history_${name}`;
 
-        addFileMessage({
-            outgoing: true,
-            fileName: "8B0D5E5B-8D90-4916-A16F-1F39985A6543.pdf",
-            meta: "2 pages · 101 KB · pdf",
-            time: "12:45 PM",
-            status: "sent",
-        });
+    function loadHistory(){
+        try {
+            const raw = localStorage.getItem(historyKey);
+            return raw ? JSON.parse(raw) : null;
+        } catch(e) {
+            return null;
+        }
+    }
 
-        addImageMessage({
-            outgoing: true,
-            imageHtml: `
-                <div style="background:#fff;padding:14px;font-family:Arial,sans-serif;">
-                    <div style="font-weight:800;font-size:22px;color:#0B2E6B;">DN <span style="color:#0B2E6B;">DIGITAL SERVICES</span></div>
-                    <div style="font-size:10px;color:#0B2E6B;margin-top:2px;">SOLUTIONS · GROWTH · SUCCESS</div>
-                    <div style="margin-top:10px;background:#0B2E6B;color:#fff;text-align:center;padding:6px 0;font-weight:700;font-size:12px;">OUR SERVICES</div>
-                </div>
-            `,
-            time: "12:55 PM",
-            status: "read",
-        });
+    function saveHistory(history){
+        localStorage.setItem(historyKey, JSON.stringify(history));
+    }
 
-    } else {
+    let history = loadHistory();
 
-        addTextMessage({
-            outgoing: false,
-            text: `Hey! This is the start of your conversation with ${name}.`,
-            time: "9:12 AM",
-        });
+    if(!history){
 
-        addTextMessage({
-            outgoing: true,
-            text: "Hey, how's it going?",
-            time: "9:15 AM",
-            status: "read",
-        });
+        history = [];
+
+        if(isSelf){
+
+            history.push({
+                type: "file",
+                outgoing: true,
+                fileName: "8B0D5E5B-8D90-4916-A16F-1F39985A6543.pdf",
+                meta: "2 pages · 101 KB · pdf",
+                time: "12:45 PM",
+                status: "sent",
+            });
+
+            history.push({
+                type: "image",
+                outgoing: true,
+                imageHtml: `
+                    <div style="background:#fff;padding:14px;font-family:Arial,sans-serif;">
+                        <div style="font-weight:800;font-size:22px;color:#0B2E6B;">DN <span style="color:#0B2E6B;">DIGITAL SERVICES</span></div>
+                        <div style="font-size:10px;color:#0B2E6B;margin-top:2px;">SOLUTIONS · GROWTH · SUCCESS</div>
+                        <div style="margin-top:10px;background:#0B2E6B;color:#fff;text-align:center;padding:6px 0;font-weight:700;font-size:12px;">OUR SERVICES</div>
+                    </div>
+                `,
+                time: "12:55 PM",
+                status: "read",
+            });
+
+        } else {
+
+            history.push({
+                type: "text",
+                outgoing: false,
+                text: `Hey! This is the start of your conversation with ${name}.`,
+                time: "9:12 AM",
+            });
+
+            history.push({
+                type: "text",
+                outgoing: true,
+                text: "Hey, how's it going?",
+                time: "9:15 AM",
+                status: "read",
+            });
+
+        }
 
     }
 
@@ -208,7 +235,7 @@ window.addEventListener("load", () => {
                     const now = new Date();
                     const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-                    addTextMessage({ outgoing: true, text: msg, time, status: "sent" });
+                    history.push({ type: "text", outgoing: true, text: msg, time, status: "sent" });
 
                 });
 
@@ -219,6 +246,20 @@ window.addEventListener("load", () => {
         sessionStorage.removeItem("oc_pending_message");
 
     }
+
+    saveHistory(history);
+
+    history.forEach((msg) => {
+
+        if(msg.type === "file"){
+            addFileMessage(msg);
+        } else if(msg.type === "image"){
+            addImageMessage(msg);
+        } else {
+            addTextMessage(msg);
+        }
+
+    });
 
     scrollToBottom();
 
@@ -245,6 +286,9 @@ window.addEventListener("load", () => {
         const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
         addTextMessage({ outgoing: true, text: value, time, status: "sent" });
+
+        history.push({ type: "text", outgoing: true, text: value, time, status: "sent" });
+        saveHistory(history);
 
         messageInput.value = "";
         updateSendState();
