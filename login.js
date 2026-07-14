@@ -78,12 +78,16 @@ window.addEventListener("load", () => {
 
                 console.error("Phone sign-in failed:", err);
 
-                if(err && err.code === "auth/invalid-phone-number"){
+                const code = (err && err.code) || "unknown";
+
+                if(code === "auth/invalid-phone-number"){
                     errorMsg.textContent = "That phone number looks invalid.";
-                } else if(err && err.code === "auth/too-many-requests"){
+                } else if(code === "auth/too-many-requests"){
                     errorMsg.textContent = "Too many attempts. Please try again later.";
                 } else {
-                    errorMsg.textContent = "Couldn't send the code. Please try again.";
+                    // Surface the exact Firebase error code so it's visible without
+                    // needing devtools open (useful on mobile where console access is limited).
+                    errorMsg.textContent = `Couldn't send the code (${code}). Please try again.`;
                 }
 
                 loginBtn.disabled = false;
