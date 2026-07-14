@@ -26,6 +26,7 @@ window.addEventListener("load", () => {
     };
 
     const conversations = [
+        { name: "You", subtitle: "Message yourself", type: "text", message: "Business card.png", time: "12:55 PM", unread: 0, self: true },
         { name: "Ava Thompson", type: "call", message: "Video call", time: "Yesterday", unread: 2, favourite: true },
         { name: "Liam Chen", type: "text", message: "Sent the files, check your inbox", time: "Yesterday", unread: 0, read: true },
         { name: "OneChat Team", type: "text", message: "Welcome to OneChat! 🎉", time: "Yesterday", unread: 1, group: true },
@@ -33,6 +34,8 @@ window.addEventListener("load", () => {
         { name: "Maya Patel", type: "text", message: "Sounds good, talk soon!", time: "Sunday", unread: 0, read: true, favourite: true },
         { name: "Noah Rivera", type: "text", message: "Can you call me later?", time: "Sunday", unread: 0 },
     ];
+
+    const totalUnread = conversations.reduce((sum, c) => sum + (c.unread || 0), 0);
 
     function renderList(filter){
 
@@ -82,6 +85,20 @@ window.addEventListener("load", () => {
                     </div>
                 </div>
             `;
+
+            item.addEventListener("click", () => {
+
+                const query = new URLSearchParams({
+                    name: c.self ? (localStorage.getItem("oc_identifier") ? `${localStorage.getItem("oc_identifier")} (You)` : "You") : c.name,
+                    subtitle: c.self ? "Message yourself" : (c.group ? "tap for group info" : "tap for contact info"),
+                    unread: totalUnread,
+                });
+
+                if(c.self) query.set("self", "1");
+
+                window.location.href = `chat.html?${query.toString()}`;
+
+            });
 
             chatList.appendChild(item);
 

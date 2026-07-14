@@ -118,6 +118,18 @@ Version : 2.0
 
     animation:fadeUp .55s ease;
 
+    cursor:pointer;
+
+    border-radius:14px;
+
+    transition:var(--transition-fast);
+
+}
+
+.profile-card:hover{
+
+    background:var(--dark-surface);
+
 }
 
 .profile-avatar{
@@ -140,6 +152,12 @@ Version : 2.0
     font-size:30px;
 
     font-weight:700;
+
+    overflow:hidden;
+
+    background-size:cover;
+
+    background-position:center;
 
 }
 

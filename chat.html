@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chat | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="chat.css">
+
+</head>
+
+<body>
+
+<div class="chat-screen">
+
+    <header class="chat-header">
+
+        <button class="back-btn" id="backBtn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <span class="back-badge" id="backBadge">0</span>
+        </button>
+
+        <div class="chat-avatar-wrap">
+            <div class="chat-avatar" id="chatAvatar">OC</div>
+            <span class="timer-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+        </div>
+
+        <div class="chat-title" id="chatTitleBtn">
+            <h1 id="chatName">OneChat User</h1>
+            <p id="chatSubtitle">tap for contact info</p>
+        </div>
+
+    </header>
+
+    <main class="chat-messages" id="chatMessages"></main>
+
+    <footer class="chat-input-bar">
+
+        <button class="round-btn" id="attachBtn" title="Attach">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+
+        <div class="text-field">
+
+            <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
+
+            <button class="sticker-btn" id="stickerBtn" title="Sticker">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8a4 4 0 0 1 4 4v6l-6 6H8a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z"/><path d="M14 20v-4a2 2 0 0 1 2-2h4"/></svg>
+            </button>
+
+        </div>
+
+        <button class="round-btn" id="cameraBtn" title="Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 8.5V7a2 2 0 0 1 2-2h1.2l.9-1.4A1.5 1.5 0 0 1 9.4 3h5.2a1.5 1.5 0 0 1 1.3 1.6L16.8 5H18a2 2 0 0 1 2 2v1.5"/>
+                <path d="M2 8.5h20V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>
+                <circle cx="12" cy="13" r="3.4"/>
+            </svg>
+        </button>
+
+        <button class="round-btn send-toggle" id="sendBtn" title="Voice message">
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg>
+            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg>
+        </button>
+
+    </footer>
+
+</div>
+
+<script src="app.js"></script>
+<script src="chat.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,479 @@
+/*
+=========================================
+OneChat
+My Profile Screen (Dark, editable)
+Version : 1.0
+=========================================
+*/
+
+.myprofile-screen{
+
+    --dark-bg:#0B141A;
+    --dark-surface:#111B21;
+    --dark-elevated:#1F2C34;
+    --dark-border:#233138;
+    --dark-text:#E9EDEF;
+    --dark-text-secondary:#8696A0;
+    --accent-green:#00A884;
+
+    width:100%;
+    min-height:100vh;
+
+    background:var(--dark-bg);
+
+    display:flex;
+    flex-direction:column;
+
+    padding:0 14px calc(var(--bottom-nav-height) + 16px);
+
+    font-family:var(--font-family);
+
+    color:var(--dark-text);
+
+}
+
+/* Header */
+
+.myprofile-header{
+
+    height:56px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    animation:fadeIn .4s ease;
+
+}
+
+.myprofile-header h1{
+
+    font-size:17px;
+
+    font-weight:600;
+
+    color:var(--dark-text);
+
+}
+
+.header-spacer{
+
+    width:38px;
+
+}
+
+.icon-btn{
+
+    width:38px;
+    height:38px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:var(--dark-text);
+
+    background:transparent;
+
+    cursor:pointer;
+
+    transition:var(--transition-fast);
+
+    flex-shrink:0;
+
+}
+
+.icon-btn svg{
+
+    width:20px;
+    height:20px;
+
+}
+
+.icon-btn:hover{
+
+    background:var(--dark-elevated);
+
+}
+
+/* Avatar Section */
+
+.avatar-section{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    padding:8px 0 28px;
+
+    animation:fadeUp .55s ease;
+
+}
+
+.thought-bubble{
+
+    background:var(--dark-elevated);
+
+    color:var(--dark-text);
+
+    padding:9px 16px;
+
+    border-radius:var(--radius-full);
+
+    font-size:14px;
+
+    font-weight:500;
+
+    margin-bottom:14px;
+
+    position:relative;
+
+    transition:var(--transition-fast);
+
+}
+
+.thought-bubble:hover{
+
+    background:#28363e;
+
+}
+
+.thought-bubble::after{
+
+    content:"";
+
+    position:absolute;
+
+    bottom:-6px;
+    left:26px;
+
+    width:12px;
+    height:12px;
+
+    background:var(--dark-elevated);
+
+    transform:rotate(45deg);
+
+    border-radius:2px;
+
+}
+
+.avatar-wrap{
+
+    position:relative;
+
+    width:140px;
+    height:140px;
+
+}
+
+.big-avatar{
+
+    width:140px;
+    height:140px;
+
+    border-radius:50%;
+
+    background:linear-gradient(135deg,var(--accent-green),#0B141A);
+
+    color:#fff;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:42px;
+
+    font-weight:700;
+
+    overflow:hidden;
+
+    cursor:pointer;
+
+}
+
+.camera-badge{
+
+    position:absolute;
+
+    bottom:4px;
+    right:4px;
+
+    width:36px;
+    height:36px;
+
+    border-radius:50%;
+
+    background:var(--dark-elevated);
+
+    border:3px solid var(--dark-bg);
+
+    color:var(--dark-text);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:var(--transition-fast);
+
+}
+
+.camera-badge svg{
+
+    width:17px;
+    height:17px;
+
+}
+
+.camera-badge:hover{
+
+    background:#28363e;
+
+}
+
+.edit-link{
+
+    margin-top:14px;
+
+    color:var(--accent-green);
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+/* Info List */
+
+.info-list{
+
+    border-radius:14px;
+
+    background:var(--dark-surface);
+
+    overflow:hidden;
+
+    animation:fadeUp .6s ease;
+
+}
+
+.info-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:16px;
+
+    border-bottom:1px solid var(--dark-border);
+
+    cursor:pointer;
+
+    transition:var(--transition-fast);
+
+}
+
+.info-item:last-child{
+
+    border-bottom:none;
+
+}
+
+.info-item:hover{
+
+    background:var(--dark-elevated);
+
+}
+
+.info-label{
+
+    font-size:16px;
+
+    color:var(--dark-text);
+
+    flex-shrink:0;
+
+}
+
+.info-value{
+
+    flex:1;
+
+    text-align:right;
+
+    font-size:15px;
+
+    color:var(--dark-text-secondary);
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+
+}
+
+.info-value.accent{
+
+    color:var(--accent-green);
+
+    font-weight:600;
+
+}
+
+.info-arrow{
+
+    width:17px;
+    height:17px;
+
+    color:var(--dark-text-secondary);
+
+    flex-shrink:0;
+
+}
+
+/* Bottom Nav */
+
+.bottom-nav{
+
+    position:fixed;
+
+    bottom:0;
+    left:0;
+    right:0;
+
+    height:var(--bottom-nav-height);
+
+    display:flex;
+
+    background:var(--dark-surface);
+
+    border-top:1px solid var(--dark-border);
+
+}
+
+.nav-item{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:3px;
+
+    color:var(--dark-text-secondary);
+
+    font-size:11px;
+
+    font-weight:600;
+
+}
+
+.nav-item.active{
+
+    color:var(--dark-text);
+
+}
+
+.nav-icon{
+
+    width:23px;
+    height:23px;
+
+}
+
+.nav-item.active .nav-icon{
+
+    color:var(--accent-green);
+
+}
+
+.nav-icon-wrap{
+
+    position:relative;
+
+    display:flex;
+
+}
+
+.nav-badge{
+
+    position:absolute;
+
+    top:-6px;
+    right:-9px;
+
+    min-width:16px;
+    height:16px;
+
+    padding:0 4px;
+
+    border-radius:var(--radius-full);
+
+    background:var(--accent-green);
+
+    color:#0B141A;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+}
+
+.nav-avatar{
+
+    width:23px;
+    height:23px;
+
+    border-radius:50%;
+
+    background:var(--dark-elevated);
+
+    color:var(--dark-text);
+
+    font-size:10px;
+
+    font-weight:700;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background-size:cover;
+
+    background-position:center;
+
+}
+
+.nav-dot{
+
+    position:absolute;
+
+    bottom:-2px;
+    right:-2px;
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    background:var(--accent-green);
+
+    border:2px solid var(--dark-surface);
+
+}
