@@ -48,6 +48,14 @@ window.addEventListener("load", () => {
                 </div>
             `;
 
+            item.addEventListener("click", () => {
+
+                const query = new URLSearchParams({ name: u.name, time: u.time, from: "updates.html" });
+
+                window.location.href = `status-view.html?${query.toString()}`;
+
+            });
+
             container.appendChild(item);
 
         });
