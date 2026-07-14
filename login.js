@@ -33,15 +33,23 @@ window.addEventListener("load", () => {
         phoneForm.classList.remove("hidden");
     });
 
-    let recaptchaVerifier = null;
+    // Create exactly ONE RecaptchaVerifier for the lifetime of this page and reuse
+    // it for every login attempt. Firebase's own docs warn that calling `render()`
+    // (which signInWithPhoneNumber does internally) a second time on a verifier
+    // already bound to this container throws "reCAPTCHA has already been rendered
+    // in this element" -- so we must never construct a second instance while the
+    // first is still attached, even after a failed attempt.
+    let recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
 
-    function getRecaptcha(){
+    function resetRecaptcha(){
 
-        if(!recaptchaVerifier){
-            recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+        try {
+            recaptchaVerifier.clear();
+        } catch(clearErr) {
+            console.warn("Failed to clear reCAPTCHA:", clearErr);
         }
 
-        return recaptchaVerifier;
+        recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
 
     }
 
@@ -65,7 +73,7 @@ window.addEventListener("load", () => {
         loginBtn.disabled = true;
         loginBtn.textContent = "Sending code...";
 
-        signInWithPhoneNumber(auth, fullPhone, getRecaptcha())
+        signInWithPhoneNumber(auth, fullPhone, recaptchaVerifier)
             .then((confirmationResult) => {
 
                 sessionStorage.setItem("oc_verification_id", confirmationResult.verificationId);
@@ -94,18 +102,10 @@ window.addEventListener("load", () => {
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Continue";
 
-                // A failed attempt can leave a stale reCAPTCHA widget rendered in the
-                // container; clear it so the next attempt can render a fresh one instead
-                // of throwing "reCAPTCHA has already been rendered in this element".
-                if(recaptchaVerifier){
-                    try {
-                        recaptchaVerifier.clear();
-                    } catch(clearErr) {
-                        console.warn("Failed to clear reCAPTCHA:", clearErr);
-                    }
-                }
-
-                recaptchaVerifier = null;
+                // Firebase invalidates the widget after a failed verification attempt,
+                // so it must be explicitly cleared and rebuilt once (not lazily on next
+                // click) before it can be reused for the next signInWithPhoneNumber call.
+                resetRecaptcha();
 
             });
 
