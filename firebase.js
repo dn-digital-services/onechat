@@ -20,9 +20,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 import {
-    getFirestore,
+    initializeFirestore,
     doc,
     getDoc,
+    getDocFromServer,
     setDoc,
     updateDoc,
     collection,
@@ -44,7 +45,18 @@ import { firebaseConfig } from "./firebase-config.js";
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// The dev preview is served through Replit's proxied iframe (mTLS terminated
+// in front of the app), which blocks Firestore's default WebChannel/gRPC
+// streaming connection. Firestore then silently falls back to its offline
+// cache and every read throws "Failed to get document because the client is
+// offline" even though the network is fine. Forcing long-polling makes
+// Firestore use plain HTTP requests instead, which the proxy passes through.
+export const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false,
+});
+
 export const storage = getStorage(app);
 
 export {
@@ -58,6 +70,7 @@ export {
     signOut,
     doc,
     getDoc,
+    getDocFromServer,
     setDoc,
     updateDoc,
     collection,
@@ -82,6 +95,31 @@ export function slugify(text){
 
 }
 
+// Reads a doc, retrying once against the server directly if the cached/stream
+// read fails with a transient "client is offline" style error (this can happen
+// briefly while Firestore's long-polling stream is still establishing). A real,
+// persistent connectivity failure still propagates so callers can handle it.
+async function readDocWithRetry(ref){
+
+    try {
+
+        return await getDoc(ref);
+
+    } catch(err) {
+
+        const message = (err && err.message) || "";
+        const looksTransient = (err && err.code === "unavailable") || /offline/i.test(message);
+
+        if(looksTransient){
+            return await getDocFromServer(ref);
+        }
+
+        throw err;
+
+    }
+
+}
+
 export function waitForAuthUser(){
 
     return new Promise((resolve) => {
@@ -100,7 +138,7 @@ export function waitForAuthUser(){
 export async function ensureUserProfile(user, extra){
 
     const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
+    const snap = await readDocWithRetry(userRef);
 
     if(!snap.exists()){
 
@@ -133,7 +171,17 @@ export async function requireAuthAndOnboarding(redirectTo){
         return null;
     }
 
-    const snap = await getDoc(doc(db, "users", user.uid));
+    const userRef = doc(db, "users", user.uid);
+    let snap = await readDocWithRetry(userRef);
+
+    // The user is authenticated but has no profile doc yet (e.g. it was never
+    // created, or was lost) -- create it instead of treating this as an error,
+    // then re-read so callers always get a real profile object back.
+    if(!snap.exists()){
+        await ensureUserProfile(user);
+        snap = await readDocWithRetry(userRef);
+    }
+
     const profile = snap.exists() ? snap.data() : null;
 
     if(!profile || profile.onboarded !== true){
