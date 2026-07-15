@@ -192,22 +192,6 @@ Version : 1.0
 
 }
 
-.alt-login-link{
-
-    display:block;
-
-    text-align:center;
-
-    margin-top:18px;
-
-    color:var(--primary-color);
-
-    font-size:var(--font-sm);
-
-    font-weight:600;
-
-}
-
 .error-msg{
 
     min-height:18px;
@@ -237,8 +221,7 @@ Version : 1.0
 
 }
 
-#loginBtn,
-#emailLoginBtn{
+#loginBtn{
 
     width:100%;
     height:var(--button-height);
@@ -257,15 +240,13 @@ Version : 1.0
 
 }
 
-#loginBtn:hover,
-#emailLoginBtn:hover{
+#loginBtn:hover{
 
     background:var(--primary-hover);
 
 }
 
-#loginBtn:disabled,
-#emailLoginBtn:disabled{
+#loginBtn:disabled{
 
     opacity:.6;
 

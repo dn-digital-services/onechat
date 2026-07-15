@@ -13,8 +13,6 @@ import {
     signInWithPhoneNumber,
     PhoneAuthProvider,
     signInWithCredential,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
     onAuthStateChanged,
     signOut,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
@@ -64,8 +62,6 @@ export {
     signInWithPhoneNumber,
     PhoneAuthProvider,
     signInWithCredential,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
     onAuthStateChanged,
     signOut,
     doc,
@@ -134,7 +130,7 @@ export function waitForAuthUser(){
 }
 
 // Ensures a users/{uid} profile doc exists for a freshly authenticated user
-// (used by both the phone-OTP flow and the email/password flow), then returns it.
+// (phone-OTP is the only auth method), then returns it.
 export async function ensureUserProfile(user, extra){
 
     const userRef = doc(db, "users", user.uid);
@@ -144,7 +140,6 @@ export async function ensureUserProfile(user, extra){
 
         await setDoc(userRef, {
             phone: user.phoneNumber || "",
-            email: user.email || "",
             displayName: "OneChat User",
             about: "Available",
             onboarded: false,
