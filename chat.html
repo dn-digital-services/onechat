@@ -30,9 +30,7 @@
 
         <div class="chat-avatar-wrap">
             <div class="chat-avatar" id="chatAvatar">OC</div>
-            <span class="timer-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            </span>
+            <span class="presence-dot hidden" id="presenceDot"></span>
         </div>
 
         <div class="chat-title" id="chatTitleBtn">
@@ -57,10 +55,6 @@
 
             <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
 
-            <button class="sticker-btn" id="stickerBtn" title="Sticker">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8a4 4 0 0 1 4 4v6l-6 6H8a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z"/><path d="M14 20v-4a2 2 0 0 1 2-2h4"/></svg>
-            </button>
-
         </div>
 
         <button class="round-btn" id="cameraBtn" title="Camera">
@@ -71,8 +65,7 @@
             </svg>
         </button>
 
-        <button class="round-btn send-toggle" id="sendBtn" title="Voice message">
-            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg>
+        <button class="round-btn send-toggle has-text" id="sendBtn" title="Send">
             <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg>
         </button>
 

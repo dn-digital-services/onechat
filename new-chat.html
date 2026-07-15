@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>New chat | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="new-chat.css">
+
+</head>
+
+<body>
+
+<div class="new-chat-screen">
+
+    <header class="nc-header">
+
+        <button class="back-btn" id="backBtn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <h1>New chat</h1>
+
+    </header>
+
+    <form id="searchForm" class="nc-search-form">
+
+        <div class="phone-input-row">
+            <span class="country-code">+91</span>
+            <input
+            type="tel"
+            id="phoneInput"
+            placeholder="Enter phone number"
+            inputmode="numeric"
+            maxlength="10"
+            autocomplete="off"
+            autofocus>
+        </div>
+
+        <button type="submit" id="searchBtn">Search</button>
+
+    </form>
+
+    <p id="errorMsg" class="nc-error"></p>
+
+    <div id="resultArea" class="nc-result"></div>
+
+</div>
+
+<script src="app.js"></script>
+<script type="module" src="new-chat.js"></script>
+
+</body>
+
+</html>

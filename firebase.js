@@ -22,14 +22,19 @@ import {
     doc,
     getDoc,
     getDocFromServer,
+    getDocs,
     setDoc,
     updateDoc,
+    writeBatch,
     collection,
     addDoc,
     query,
+    where,
+    limit,
     orderBy,
     onSnapshot,
     serverTimestamp,
+    increment,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 import {
@@ -67,14 +72,19 @@ export {
     doc,
     getDoc,
     getDocFromServer,
+    getDocs,
     setDoc,
     updateDoc,
+    writeBatch,
     collection,
     addDoc,
     query,
+    where,
+    limit,
     orderBy,
     onSnapshot,
     serverTimestamp,
+    increment,
     ref,
     uploadBytes,
     getDownloadURL,
@@ -113,6 +123,55 @@ async function readDocWithRetry(ref){
         throw err;
 
     }
+
+}
+
+// ==========================================================================
+// Presence (online / offline / last seen)
+// ==========================================================================
+// Firestore has no built-in "onDisconnect" (that's a Realtime Database
+// feature), so presence here is heartbeat-based: while a page is visible we
+// touch users/{uid}.lastSeen every 25s and set online=true; the moment the
+// tab is hidden/closed we flip online=false. Readers additionally treat a
+// stale heartbeat (see ocIsOnline in app.js) as offline, so a crashed tab
+// that never fired beforeunload doesn't show "online" forever.
+let presenceStarted = false;
+
+export function startPresence(uid){
+
+    if(presenceStarted || !uid) return;
+    presenceStarted = true;
+
+    const userRef = doc(db, "users", uid);
+
+    function setOnline(){
+        setDoc(userRef, { online: true, lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
+    }
+
+    function setOffline(){
+        setDoc(userRef, { online: false, lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
+    }
+
+    setOnline();
+
+    setInterval(() => {
+        if(document.visibilityState === "visible"){
+            setOnline();
+        }
+    }, 25000);
+
+    document.addEventListener("visibilitychange", () => {
+
+        if(document.visibilityState === "visible"){
+            setOnline();
+        } else {
+            setOffline();
+        }
+
+    });
+
+    window.addEventListener("beforeunload", setOffline);
+    window.addEventListener("pagehide", setOffline);
 
 }
 
@@ -183,6 +242,8 @@ export async function requireAuthAndOnboarding(redirectTo){
         window.location.href = target;
         return null;
     }
+
+    startPresence(user.uid);
 
     return { user, profile };
 
