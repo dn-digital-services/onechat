@@ -19,6 +19,8 @@ Version : 1.0
     --incoming-bubble:#1F2C34;
     --amber:#FFD97D;
 
+    position:relative;   /* needed for .attach-menu position:absolute anchoring */
+
     width:100%;
     height:100vh;
 
@@ -1179,5 +1181,74 @@ Version : 1.0
 /* home.js delivered tick colour */
 .check-delivered{
     color:rgba(233,237,239,.65);
+}
+
+/* ── Attachment options popup menu ──────────────────────────────────────── */
+
+.attach-menu{
+
+    position:absolute;
+
+    bottom:72px;   /* just above the input bar */
+    left:8px;
+
+    z-index:200;
+
+    background:var(--dark-elevated);
+
+    border:1px solid var(--dark-border);
+
+    border-radius:14px;
+
+    padding:8px 6px;
+
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+
+    min-width:150px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.45);
+
+    animation:fadeUp .18s ease;
+
+}
+
+.attach-menu.hidden{
+    display:none;
+}
+
+.attach-option{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:11px 14px;
+
+    border-radius:10px;
+
+    font-size:14px;
+
+    color:var(--dark-text);
+
+    font-family:var(--font-family);
+
+    text-align:left;
+
+    transition:.15s ease;
+
+}
+
+.attach-option:hover,
+.attach-option:active{
+    background:rgba(255,255,255,.07);
+}
+
+.attach-opt-icon{
+    font-size:20px;
+    line-height:1;
+    width:28px;
+    text-align:center;
 }
 

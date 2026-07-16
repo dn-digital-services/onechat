@@ -1,35 +1,71 @@
 // OneChat – Firebase Cloud Messaging Service Worker
+// Uses the compat SDK (required for service workers – no ES module support).
+// Config is loaded via importScripts("/sw-config.js") which the Node server
+// serves as a plain global assignment (no export keyword).
 importScripts("https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js");
 
-// The config is injected at runtime via /firebase-config.js, but service
-// workers can't use ES modules or dynamic imports, so we keep a copy here
-// that will be populated by the server's /sw-config endpoint or remain as
-// an empty stub (notifications will still work for foreground-only cases).
-
-let firebaseConfigFromServer = {};
-
-// Fetch config synchronously during SW install so the messaging instance
-// has the right project details when a push arrives.
+// Load Firebase config injected by the server as a plain JS global.
+// /sw-config.js sets: self.firebaseSwConfig = { apiKey, projectId, ... }
 try {
-    const resp = self.fetch("/firebase-config.js", { cache: "no-cache" });
-    // We can't await here at the top level, so messaging is initialized lazily
-} catch(e){ /* ignore */ }
+    importScripts("/sw-config.js");
+} catch(e){
+    console.warn("[SW] Failed to load /sw-config.js:", e);
+}
+
+// Initialise Firebase only if we have a valid config
+let messaging = null;
+try {
+    const cfg = self.firebaseSwConfig || {};
+    if(cfg.apiKey && cfg.projectId && cfg.messagingSenderId && cfg.appId){
+        if(!firebase.apps.length){
+            firebase.initializeApp(cfg);
+        }
+        messaging = firebase.messaging();
+
+        // Handle background messages (app backgrounded or closed).
+        // Firebase SDK calls this automatically when a push arrives with a
+        // 'notification' payload; we also handle it manually via the raw
+        // 'push' listener below so data-only messages are shown too.
+        messaging.onBackgroundMessage((payload) => {
+            const { notification = {}, data = {} } = payload;
+            const title = notification.title || data.title || "OneChat";
+            return self.registration.showNotification(title, {
+                body: notification.body || data.body || "You have a new message",
+                icon: "/logo.PNG",
+                badge: "/logo.PNG",
+                tag: (data.chatId || notification.tag) || "onechat-msg",
+                renotify: true,
+                data: data,
+                vibrate: [200, 100, 200],
+            });
+        });
+    } else {
+        console.warn("[SW] Firebase config missing – notifications will not work until env vars are set.");
+    }
+} catch(e){
+    console.error("[SW] Firebase init failed:", e);
+}
 
 self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches.open("onechat-sw-v1").then(() => self.skipWaiting())
-    );
+    event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
     event.waitUntil(self.clients.claim());
 });
 
-// Receive push messages when the app is in the background/closed
+// Fallback raw push handler – catches data-only FCM messages and any push
+// that slips past the Firebase messaging handler (e.g. when messaging init
+// failed above).  Firebase's own push handler runs first; this only fires
+// for messages it didn't handle.
 self.addEventListener("push", (event) => {
 
     if(!event.data) return;
+
+    // If Firebase messaging is active it handles the push itself.
+    // We only take over when messaging is not initialised.
+    if(messaging) return;
 
     let payload;
     try {
@@ -39,19 +75,19 @@ self.addEventListener("push", (event) => {
     }
 
     const { notification = {}, data = {} } = payload;
+    const title = notification.title || data.title || "OneChat";
 
-    const title = notification.title || "OneChat";
-    const options = {
-        body: notification.body || "You have a new message",
-        icon: "/logo.PNG",
-        badge: "/logo.PNG",
-        tag: data.chatId || "onechat-msg",
-        renotify: true,
-        data,
-        vibrate: [200, 100, 200],
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: notification.body || data.body || "You have a new message",
+            icon: "/logo.PNG",
+            badge: "/logo.PNG",
+            tag: (data.chatId || notification.tag) || "onechat-msg",
+            renotify: true,
+            data: data,
+            vibrate: [200, 100, 200],
+        })
+    );
 
 });
 
@@ -61,21 +97,22 @@ self.addEventListener("notificationclick", (event) => {
     event.notification.close();
 
     const data = event.notification.data || {};
-    const url = data.uid ? `/chat.html?uid=${data.uid}&name=${encodeURIComponent(data.name || "")}` : "/home.html";
+    const url = data.uid
+        ? `/chat.html?uid=${encodeURIComponent(data.uid)}&name=${encodeURIComponent(data.name || "")}`
+        : "/home.html";
 
     event.waitUntil(
         self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-
+            // Focus an existing window if one is open
             for(const client of clients){
-                if(client.url.includes(self.location.origin)){
+                if(client.url.startsWith(self.location.origin)){
                     client.focus();
                     client.navigate(url);
                     return;
                 }
             }
-
+            // Otherwise open a new window
             return self.clients.openWindow(url);
-
         })
     );
 

@@ -348,6 +348,31 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ── GET /sw-config.js – Firebase config for the service worker ───────────
+    // Service workers cannot use ES modules or dynamic import(), so we expose
+    // the config as a plain self.* assignment that importScripts() can load.
+    if(req.url.split("?")[0] === "/sw-config.js"){
+
+        const cfg = {
+            apiKey: process.env.FIREBASE_API_KEY || "",
+            authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
+            projectId: process.env.FIREBASE_PROJECT_ID || "",
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "",
+            messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "",
+            appId: process.env.FIREBASE_APP_ID || "",
+        };
+
+        res.writeHead(200, {
+            "Content-Type": "text/javascript",
+            "Cache-Control": "no-cache",
+            "Service-Worker-Allowed": "/",
+        });
+
+        res.end(`self.firebaseSwConfig = ${JSON.stringify(cfg)};\n`);
+        return;
+
+    }
+
     // ── GET /firebase-config.js – inject Firebase env vars ────────────────────
     if(req.url.split("?")[0] === "/firebase-config.js"){
 

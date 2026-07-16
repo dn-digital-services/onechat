@@ -17,7 +17,7 @@ import {
     increment,
     arrayUnion,
     ref,
-    uploadBytesResumable,
+    uploadBytes,
     getDownloadURL,
     requireAuthAndOnboarding,
 } from "./firebase.js";
@@ -355,19 +355,23 @@ window.addEventListener("load", async () => {
     ctxCancel.addEventListener("click", hideContextMenu);
 
     ctxDeleteForMe.addEventListener("click", async () => {
-        if(!activeContextMsgId) return;
+        // Capture msgId BEFORE hideContextMenu() clears activeContextMsgId
+        const msgId = activeContextMsgId;
+        if(!msgId) return;
         hideContextMenu();
         try {
-            const msgRef = doc(messagesRef, activeContextMsgId);
+            const msgRef = doc(messagesRef, msgId);
             await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
         } catch(err){ console.error("Delete for Me failed:", err); }
     });
 
     ctxDeleteForEveryone.addEventListener("click", async () => {
-        if(!activeContextMsgId) return;
+        // Capture msgId BEFORE hideContextMenu() clears activeContextMsgId
+        const msgId = activeContextMsgId;
+        if(!msgId) return;
         hideContextMenu();
         try {
-            const msgRef = doc(messagesRef, activeContextMsgId);
+            const msgRef = doc(messagesRef, msgId);
             await updateDoc(msgRef, { deleted: true, message: "This message was deleted", fileURL: null });
         } catch(err){ console.error("Delete for Everyone failed:", err); }
     });
@@ -622,18 +626,36 @@ window.addEventListener("load", async () => {
     const uploadFill = document.getElementById("uploadProgressFill");
     const uploadLabel = document.getElementById("uploadProgressLabel");
 
+    let _fakeProgressTimer = null;
+
     function showUploadProgress(percent){
         uploadBar.classList.remove("hidden");
-        uploadFill.style.width = Math.round(percent) + "%";
-        uploadLabel.textContent = percent >= 100 ? "Processing…" : `Uploading ${Math.round(percent)}%`;
+        uploadFill.style.width = Math.min(100, Math.round(percent)) + "%";
+        uploadLabel.textContent = percent >= 100 ? "Processing…" : `Uploading ${Math.min(99, Math.round(percent))}%`;
     }
 
     function hideUploadProgress(){
+        if(_fakeProgressTimer){ clearInterval(_fakeProgressTimer); _fakeProgressTimer = null; }
         uploadBar.classList.add("hidden");
         uploadFill.style.width = "0%";
     }
 
+    // Animate a fake progress bar that creeps toward 90 % while the upload runs.
+    // Firebase's uploadBytes is a single-shot request with no streaming progress;
+    // this gives the user feedback that something is happening.
+    function startFakeProgress(){
+        let pct = 0;
+        showUploadProgress(0);
+        _fakeProgressTimer = setInterval(() => {
+            // Converges toward 90 % asymptotically
+            pct += (90 - pct) * 0.12;
+            showUploadProgress(pct);
+        }, 300);
+    }
+
     // ── Send media file (image / video / document) ─────────────────────────────
+    // Uses uploadBytes (single-shot, not resumable) – simpler, fewer round-trips,
+    // and more reliable through Replit's proxy than a multi-step resumable session.
 
     async function sendFile(file){
 
@@ -641,28 +663,29 @@ window.addEventListener("load", async () => {
 
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
-        const safeName = file.name || (isImage ? `photo_${Date.now()}.jpg` : isVideo ? `video_${Date.now()}.mp4` : `file_${Date.now()}`);
 
-        const storagePath = `users/${user.uid}/chats/${chatId}/files/${Date.now()}_${safeName}`;
+        // Build a safe filename: strip path separators, fall back to a timestamp name
+        const rawName = (file.name || "").replace(/[/\\]/g, "_") || (
+            isImage ? `photo_${Date.now()}.jpg`
+          : isVideo ? `video_${Date.now()}.mp4`
+          : `file_${Date.now()}`
+        );
+
+        const storagePath = `chats/${chatId}/files/${Date.now()}_${rawName}`;
         const storageRef = ref(storage, storagePath);
 
-        const task = uploadBytesResumable(storageRef, file);
-
         sendBtn.disabled = true;
-        showUploadProgress(0);
+        startFakeProgress();
 
         try {
 
-            await new Promise((resolve, reject) => {
-                task.on("state_changed",
-                    (snap) => showUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
-                    reject,
-                    resolve,
-                );
-            });
+            // Single-shot upload – throws immediately on auth/rules/network failure
+            const snapshot = await uploadBytes(storageRef, file);
 
+            if(_fakeProgressTimer){ clearInterval(_fakeProgressTimer); _fakeProgressTimer = null; }
             showUploadProgress(100);
-            const url = await getDownloadURL(storageRef);
+
+            const url = await getDownloadURL(snapshot.ref);
             hideUploadProgress();
 
             const base = {
@@ -674,7 +697,7 @@ window.addEventListener("load", async () => {
             };
 
             let msgType = "file";
-            let lastMsg = safeName;
+            let lastMsg = rawName;
             let notifyBody = "📎 File";
 
             if(isImage){
@@ -689,12 +712,12 @@ window.addEventListener("load", async () => {
                 await addDoc(messagesRef, { ...base, type: "video", message: "Video" });
             } else {
                 const sizeKb = Math.max(1, Math.round(file.size / 1024));
-                const ext = (safeName.split(".").pop() || "file").toUpperCase();
+                const ext = (rawName.split(".").pop() || "file").toUpperCase().slice(0, 6);
                 await addDoc(messagesRef, {
                     ...base,
                     type: "file",
-                    message: safeName,
-                    fileName: safeName,
+                    message: rawName,
+                    fileName: rawName,
                     meta: `${sizeKb} KB · ${ext}`,
                 });
             }
@@ -712,20 +735,65 @@ window.addEventListener("load", async () => {
             notifyOtherUser({ body: notifyBody });
 
         } catch(err){
-            console.error("File upload failed:", err);
+            console.error("File upload failed:", err.code || "", err.message || err);
             hideUploadProgress();
-            alert("Couldn't upload the file. Please check your connection and try again.");
+
+            // Surface a human-readable error instead of silently showing 0%
+            let msg = "Couldn't upload the file. Please try again.";
+            if(err.code === "storage/unauthorized")
+                msg = "Upload permission denied. Check Firebase Storage rules.";
+            else if(err.code === "storage/quota-exceeded")
+                msg = "Storage quota exceeded.";
+            else if(err.code === "storage/invalid-argument")
+                msg = "Invalid file – please try a different one.";
+            else if(err.message)
+                msg = `Upload failed: ${err.message}`;
+
+            alert(msg);
         } finally {
             sendBtn.disabled = false;
         }
 
     }
 
+    // ── Attachment options menu ────────────────────────────────────────────────
+
+    const attachMenu = document.getElementById("attachMenu");
     const attachInput = document.getElementById("attachInput");
     const cameraInput = document.getElementById("cameraInput");
+    const docInput    = document.getElementById("docInput");
 
-    document.getElementById("attachBtn").addEventListener("click", () => {
+    function toggleAttachMenu(e){
+        e.stopPropagation();
+        attachMenu.classList.toggle("hidden");
+    }
+
+    function closeAttachMenu(){
+        attachMenu.classList.add("hidden");
+    }
+
+    document.getElementById("attachBtn").addEventListener("click", toggleAttachMenu);
+
+    // Dismiss the menu when clicking anywhere else
+    document.addEventListener("click", (e) => {
+        if(!attachMenu.contains(e.target) && e.target !== document.getElementById("attachBtn")){
+            closeAttachMenu();
+        }
+    });
+
+    document.getElementById("menuOptCamera").addEventListener("click", () => {
+        closeAttachMenu();
+        cameraInput.click();
+    });
+
+    document.getElementById("menuOptGallery").addEventListener("click", () => {
+        closeAttachMenu();
         attachInput.click();
+    });
+
+    document.getElementById("menuOptDocument").addEventListener("click", () => {
+        closeAttachMenu();
+        docInput.click();
     });
 
     document.getElementById("cameraBtn").addEventListener("click", () => {
@@ -742,6 +810,12 @@ window.addEventListener("load", async () => {
         const file = e.target.files && e.target.files[0];
         if(file) sendFile(file);
         cameraInput.value = "";
+    });
+
+    docInput.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if(file) sendFile(file);
+        docInput.value = "";
     });
 
     window.addEventListener("beforeunload", () => setTyping(false));

@@ -196,16 +196,26 @@ export function startPresence(uid){
 
 }
 
-export function waitForAuthUser(){
+// waitForAuthUser – waits until Firebase Auth has finished restoring the
+// persisted session from IndexedDB/localStorage before returning the current
+// user (or null). Using auth.authStateReady() avoids the race condition where
+// onAuthStateChanged fires null first (before the persisted token is loaded),
+// which previously caused signup.js / permissions.js to redirect back to
+// welcome.html immediately after a fresh OTP login.
+export async function waitForAuthUser(){
 
-    return new Promise((resolve) => {
-
-        const unsub = onAuthStateChanged(auth, (user) => {
-            unsub();
-            resolve(user);
+    // authStateReady() is available in Firebase Auth v9.22+ (our bundle is
+    // v10.13), resolves once the initial auth state is determined from storage.
+    if(typeof auth.authStateReady === "function"){
+        await auth.authStateReady();
+    } else {
+        // Fallback for older bundles: wait for the first onAuthStateChanged event.
+        await new Promise((resolve) => {
+            const unsub = onAuthStateChanged(auth, () => { unsub(); resolve(); });
         });
+    }
 
-    });
+    return auth.currentUser;
 
 }
 

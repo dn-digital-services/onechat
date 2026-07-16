@@ -48,16 +48,34 @@
         <span class="upload-progress-label" id="uploadProgressLabel">Uploading…</span>
     </div>
 
+    <!-- Attachment options popup (shown above the input bar) -->
+    <div class="attach-menu hidden" id="attachMenu">
+        <button class="attach-option" id="menuOptCamera">
+            <span class="attach-opt-icon">📷</span>
+            <span>Camera</span>
+        </button>
+        <button class="attach-option" id="menuOptGallery">
+            <span class="attach-opt-icon">🖼️</span>
+            <span>Gallery</span>
+        </button>
+        <button class="attach-option" id="menuOptDocument">
+            <span class="attach-opt-icon">📁</span>
+            <span>Document</span>
+        </button>
+    </div>
+
     <footer class="chat-input-bar">
 
         <button class="round-btn" id="attachBtn" title="Attach">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
 
-        <!-- Gallery: images + videos -->
+        <!-- Gallery / general media picker -->
         <input type="file" id="attachInput" accept="image/*,video/*" hidden>
-        <!-- Camera: capture photo or video -->
+        <!-- Camera capture (photo or video) -->
         <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
+        <!-- Document picker -->
+        <input type="file" id="docInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,application/*" hidden>
 
         <div class="text-field">
 
