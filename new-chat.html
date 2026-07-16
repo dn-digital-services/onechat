@@ -31,14 +31,21 @@
 
     </header>
 
-    <form id="searchForm" class="nc-search-form">
+    <!-- Search mode tabs -->
+    <div class="nc-tabs">
+        <button class="nc-tab active" id="tabPhone" data-tab="phone">By Phone</button>
+        <button class="nc-tab" id="tabName" data-tab="name">By Name</button>
+    </div>
+
+    <!-- Phone search -->
+    <form id="phoneForm" class="nc-search-form" novalidate>
 
         <div class="phone-input-row">
             <span class="country-code">+91</span>
             <input
             type="tel"
             id="phoneInput"
-            placeholder="Enter phone number"
+            placeholder="Enter 10-digit number"
             inputmode="numeric"
             maxlength="10"
             autocomplete="off"
@@ -46,6 +53,22 @@
         </div>
 
         <button type="submit" id="searchBtn">Search</button>
+
+    </form>
+
+    <!-- Name search -->
+    <form id="nameForm" class="nc-search-form hidden" novalidate>
+
+        <div class="phone-input-row" style="padding-left:14px;">
+            <input
+            type="text"
+            id="nameInput"
+            placeholder="Enter name to search"
+            autocomplete="off"
+            style="padding-left:0;">
+        </div>
+
+        <button type="submit" id="nameSearchBtn">Search</button>
 
     </form>
 

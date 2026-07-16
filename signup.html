@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Set Up Profile | OneChat</title>
+
+<link rel="stylesheet" href="variables.css">
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="responsive.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="stylesheet" href="signup.css">
+
+</head>
+
+<body>
+
+<div class="signup-screen">
+
+    <div class="signup-inner">
+
+        <div class="signup-top">
+            <img src="logo.PNG" alt="OneChat" class="signup-logo">
+            <h1>Create your profile</h1>
+            <p>Tell us a bit about yourself so others can find and recognise you.</p>
+        </div>
+
+        <!-- Avatar picker -->
+        <div class="signup-avatar-wrap">
+            <div class="signup-avatar" id="signupAvatar">OC</div>
+            <button class="signup-avatar-btn" id="signupAvatarBtn" title="Add photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 8.5V7a2 2 0 0 1 2-2h1.2l.9-1.4A1.5 1.5 0 0 1 9.4 3h5.2a1.5 1.5 0 0 1 1.3 1.6L16.8 5H18a2 2 0 0 1 2 2v1.5"/>
+                    <path d="M2 8.5h20V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>
+                    <circle cx="12" cy="13" r="3.4"/>
+                </svg>
+            </button>
+            <input type="file" id="avatarInput" accept="image/*" capture="user" hidden>
+        </div>
+
+        <form id="signupForm" class="signup-form" novalidate>
+
+            <div class="signup-field">
+                <label for="nameInput">Full Name <span class="required">*</span></label>
+                <input type="text" id="nameInput" placeholder="Your name" autocomplete="name" maxlength="60" required>
+                <p class="field-hint">This is how people will see you on OneChat.</p>
+            </div>
+
+            <div class="signup-field">
+                <label for="emailInput">Email <span class="optional">(optional)</span></label>
+                <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+            </div>
+
+            <div class="signup-field">
+                <label for="aboutInput">About <span class="optional">(optional)</span></label>
+                <input type="text" id="aboutInput" placeholder="Available" maxlength="139">
+            </div>
+
+            <p id="signupError" class="signup-error"></p>
+
+            <button type="submit" id="signupBtn" class="signup-btn">Continue</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+<script type="module" src="signup.js"></script>
+
+</body>
+
+</html>

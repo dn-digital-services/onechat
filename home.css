@@ -452,6 +452,12 @@ Version : 2.0
 
 }
 
+.check-delivered{
+
+    color:rgba(233,237,239,.65);
+
+}
+
 .unread-badge{
 
     min-width:20px;

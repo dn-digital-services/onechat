@@ -1,43 +1,98 @@
 # OneChat
 
 ## Overview
-OneChat is a static HTML/CSS/JS front-end prototype for a messaging app. There is no backend — screens use `localStorage` to fake auth/onboarding state and in-memory mock data for chat previews.
+OneChat is a WhatsApp-style messaging app built with HTML/CSS/JS on the front-end, backed by Firebase (Auth, Firestore, Storage, Cloud Messaging). The server (`server.js`) is a plain Node.js HTTP server with no npm dependencies that serves static files and provides a single POST `/api/notify` endpoint for sending FCM push notifications.
 
-## Screens
-- `index.html` — redirects to `splash.html`
-- `splash.html` → `welcome.html` (auto-redirect after logo animation)
-- `welcome.html` — intro screen, "Get Started" → `login.html`
-- `login.html` — phone/email + password form (no real auth) → `otp.html`
-- `otp.html` — 4-digit code entry (any 4 digits work) → `permissions.html`
-- `permissions.html` — toggle contacts/notifications/mic/camera → `home.html`
-- `updates.html` — dark status/updates feed (add-status row, "Recent updates" with story rings, collapsible "Viewed updates"), guarded/bottom nav
-- `calls.html` — dark call log screen (Call/Schedule/Keypad/Favourites quick actions + recent calls with incoming/outgoing/missed icons), same guard/bottom nav
-- `communities.html` — dark empty-state screen ("New community" CTA, illustration), same guard/bottom nav
-- `home.html` — dark WhatsApp-style chat list (search, filter chips, mock conversations) + bottom nav (guarded: redirects to `welcome.html` if onboarding not completed); clicking a conversation opens `chat.html`
-- `chat.html` — individual chat conversation screen (header with back+unread badge, avatar, encryption/disappearing-message notices, text/file/image message bubbles, working message input that sends new outgoing text bubbles and toggles mic→send icon while typing); tapping the header name/avatar opens `contact-info.html`
-- `contact-info.html` — "Contact info" screen (avatar, name, number/status, Audio + Video quick actions only, Media/links/docs, Manage storage, Notifications, Chat theme, Disappearing messages, and a working Lock chat toggle); tapping the avatar opens a full-screen photo viewer
-- `status-view.html` — full-screen status/story viewer opened from `updates.html`; shows progress bar, header (back, avatar, name, time, more menu), a quote-card status body (deterministic per contact), and a reply bar with quick emoji reactions + like button
-- `myprofile.html` — editable "Profile" screen reached by tapping the profile card on `profile.html`; lets the user change their photo (via device file/camera picker, stored as a data URL in `localStorage`), display name, username, and links
-- `profile.html` — dark settings screen (Account, Privacy, Chats, Appearance, Notifications, Payments, Storage and data, Help and feedback, Invite a friend, Accounts Centre) + logout, same guard/bottom nav
-
-`updates.html`, `calls.html`, `communities.html`, `home.html`, and `profile.html` share a dark WhatsApp-inspired visual style (scoped CSS variables prefixed `--dark-*` inside each screen's root class) with hand-drawn SVG line icons instead of emoji, and an identical 5-tab bottom nav (Updates, Calls, Communities, Chats, You) linking to each other.
-
-Shared styles: `variables.css` (design tokens), `global.css` (reset), `responsive.css`, `animations.css`. Each screen also has its own `<name>.css` and `<name>.js`. `app.js` is a shared script include (currently empty, kept for consistency with the original file layout).
+## Screens & Flow
+- `index.html` → `splash.html` (auto-redirects after 1.5 s)
+- `splash.html` → `welcome.html`
+- `welcome.html` → `login.html` (phone OTP)
+- `login.html` → `otp.html` (6-digit OTP entry)
+- `otp.html`:
+  - **New user** → `signup.html` (collect name/photo/email/about)
+  - **Returning user** (already `onboarded: true`) → `home.html`
+- `signup.html` → `permissions.html` (sets `onboarded: true`) → `home.html`
+- `home.html` — chat list (search, unread filter, delivered-status management)
+- `new-chat.html` — search by phone number or name
+- `chat.html` — 1-to-1 conversation (messages, media, delete, typing, presence)
+- `contact-info.html`, `status-view.html`, `updates.html`, `calls.html`, `communities.html`, `profile.html`, `myprofile.html`
 
 ## Running
-Static files are served by `server.js` (plain Node `http` server, no dependencies) on port 5000, bound via the `Start application` workflow (`node server.js`). `server.js` also has one dynamic route, `/firebase-config.js`, which reads the `FIREBASE_*` env vars at request time and emits them as an ES module.
+`node server.js` on port 5000 (configured in the `Start application` workflow).
 
 ## Backend: Firebase
-The app now uses a real Firebase project (client SDK only, no server-side Admin SDK) for auth, data and file storage. Firebase is loaded via CDN ES modules (`https://www.gstatic.com/firebasejs/10.13.0/...`), initialized once in `firebase.js`, and imported by every page script (each page's `<script>` tag is now `type="module"`).
+All Firebase config comes from environment variables injected at `/firebase-config.js` by server.js.
 
-- **Auth**: Phone number + SMS OTP via Firebase Authentication (`signInWithPhoneNumber` + invisible reCAPTCHA in `login.js`, `PhoneAuthProvider.credential` + `signInWithCredential` in `otp.js`). The `verificationId` is handed off between `login.html` and `otp.html` via `sessionStorage` (the confirmation object itself can't survive a full page navigation). The password field on `login.html` is kept for UI parity but isn't sent to Firebase — phone auth doesn't use passwords.
-  - **UI exception**: the OTP screen was changed from 4 boxes to 6, because Firebase's SMS codes are always 6 digits — 4 boxes made verification impossible. This is the one visual deviation from the original design.
-  - Google's reCAPTCHA badge will appear on the login screen; this is required by Firebase phone auth and can't be removed while using it.
-- **Firestore**: all data lives under `users/{uid}/...` so per-user Firestore rules stay simple (see `firestore.rules`). `users/{uid}` holds profile fields (`displayName`, `username`, `phone`, `about`, `links`, `photoURL`, `onboarded`, `permissions`). `users/{uid}/chats/{chatId}` holds each conversation's summary (`lastMessage`, `updatedAt`, `unreadCount`, etc.) and `users/{uid}/chats/{chatId}/messages/{msgId}` holds the message log. `home.js` and `chat.js` render live via `onSnapshot` — no polling, no manual refresh, matches the "instant update" requirement.
-- **Storage**: profile photos (`myprofile.js`) and chat attachments (`chat.js`) upload to Firebase Storage under `users/{uid}/...` and store the resulting download URL in Firestore.
-- **Contacts caveat**: this prototype never had a real contacts/friends system — the conversation list (Ava Thompson, Liam Chen, etc.) and the Updates list (Rahul Bro, etc.) are still fixed demo names, not real second Firebase accounts. They're seeded into each signed-in user's own `users/{uid}/chats` on first login so persistence/realtime is genuinely backed by Firestore (e.g. multi-tab/multi-device sync of your own message history), but you're always messaging into your own data, not a second real person. Adding real multi-user contacts would be a separate feature.
-- **Security rules**: `firestore.rules` and `storage.rules` are included in the repo but were not deployed (no Firebase CLI credentials in this environment). Paste them into the Firebase console — Firestore Database → Rules, and Storage → Rules — to enforce the per-user access model.
-- **Firebase console setup required**: enable "Phone" as a sign-in provider under Authentication → Sign-in method, and add this Repl's domain (and your published domain once deployed) under Authentication → Settings → Authorized domains, or phone sign-in will fail.
+| Env var | Required | Purpose |
+|---------|----------|---------|
+| `FIREBASE_API_KEY` | ✅ | Firebase project API key |
+| `FIREBASE_AUTH_DOMAIN` | ✅ | Firebase auth domain |
+| `FIREBASE_PROJECT_ID` | ✅ | Firebase project ID |
+| `FIREBASE_STORAGE_BUCKET` | ✅ | Firebase Storage bucket |
+| `FIREBASE_MESSAGING_SENDER_ID` | ✅ | Firebase Cloud Messaging sender ID |
+| `FIREBASE_APP_ID` | ✅ | Firebase app ID |
+| `FIREBASE_VAPID_KEY` | ⭐ FCM | Web Push VAPID key (from Firebase Console → Cloud Messaging) |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | ⭐ FCM | Full service account JSON (for server-side FCM sending) |
+
+### Firebase Console setup checklist
+1. **Authentication** → Sign-in method → Enable **Phone**
+2. **Authentication** → Settings → **Authorised domains** → add your Replit dev domain + deployed domain
+3. **Firestore** → Rules → paste `firestore.rules`
+4. **Storage** → Rules → paste `storage.rules`
+5. **Cloud Messaging** → Web configuration → generate **VAPID key** → set `FIREBASE_VAPID_KEY`
+6. **Project settings** → Service accounts → Generate new private key → set as `FIREBASE_SERVICE_ACCOUNT_JSON`
+
+## Firestore Schema
+```
+users/{uid}
+  - phone, displayName, email, photoURL, about, username, links
+  - online (bool), lastSeen (timestamp)
+  - onboarded (bool), permissions (map)
+  - fcmToken (string, updated on login)
+  - createdAt, updatedAt
+
+chats/{chatId}   (chatId = sorted UIDs joined by "_")
+  - participants: [uid, uid]
+  - participantInfo: { uid: { displayName, photoURL, phone } }
+  - unreadCount: { uid: number }
+  - typing: { uid: bool }
+  - lastMessage, lastMessageType, lastMessageSenderId, lastMessageStatus
+  - createdAt, updatedAt
+
+chats/{chatId}/messages/{msgId}
+  - type: "text" | "image" | "video" | "file"
+  - senderId, receiverId
+  - message, fileURL, fileName, meta
+  - status: "sent" | "delivered" | "seen"
+  - deleted: bool (Delete for Everyone)
+  - deletedFor: [uid, …] (Delete for Me)
+  - timestamp
+```
+
+## Features implemented
+- ✅ OTP Phone login (Firebase Auth)
+- ✅ Sign-up page for new users (name, photo, email, about)
+- ✅ Profile propagates to all chats automatically on update
+- ✅ Search by phone number or name
+- ✅ One-to-one chat with real-time Firestore
+- ✅ Online / Offline / Last Seen presence (heartbeat-based)
+- ✅ Typing indicator
+- ✅ Single tick (Sent) / Double grey tick (Delivered) / Double blue tick (Read)
+  - Delivered: marked when recipient's home screen loads (updates individual message docs)
+  - Read: marked when recipient opens the chat
+- ✅ Emoji support
+- ✅ Media sharing: images, videos, documents
+  - Upload progress bar
+  - Full-screen media viewer with download
+- ✅ Camera capture (photo + video)
+- ✅ Gallery selection (image + video)
+- ✅ Long-press / right-click message context menu
+  - Delete for Me (hidden from your view only)
+  - Delete for Everyone (shows "This message was deleted" to both)
+- ✅ Push Notifications via FCM
+  - Service worker (`firebase-messaging-sw.js`)
+  - Token saved to Firestore on login
+  - Server endpoint `POST /api/notify` calls FCM v1 API using service account JWT
 
 ## User preferences
 None recorded yet.

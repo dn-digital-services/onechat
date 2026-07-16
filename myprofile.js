@@ -1,4 +1,18 @@
-import { db, storage, doc, setDoc, ref, uploadBytes, getDownloadURL, requireAuthAndOnboarding } from "./firebase.js";
+import {
+    db,
+    storage,
+    doc,
+    setDoc,
+    collection,
+    query,
+    where,
+    getDocs,
+    writeBatch,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    requireAuthAndOnboarding,
+} from "./firebase.js";
 
 window.addEventListener("load", async () => {
 
@@ -21,7 +35,36 @@ window.addEventListener("load", async () => {
     async function save(patch){
         profile = { ...profile, ...patch };
         await setDoc(userRef, patch, { merge: true });
+        // If name or photo changed, propagate to all chat participantInfo docs
+        if(patch.displayName !== undefined || patch.photoURL !== undefined){
+            propagateProfileToChats(patch).catch(() => {});
+        }
         refresh();
+    }
+
+    // Keep the denormalised participantInfo in every chat document up to date
+    // so the other person always sees the latest name/photo.
+    async function propagateProfileToChats(patch){
+        try {
+            const chatsSnap = await getDocs(
+                query(collection(db, "chats"), where("participants", "array-contains", user.uid))
+            );
+            if(chatsSnap.empty) return;
+            const batch = writeBatch(db);
+            chatsSnap.forEach((chatDoc) => {
+                const update = {};
+                if(patch.displayName !== undefined){
+                    update[`participantInfo.${user.uid}.displayName`] = patch.displayName;
+                }
+                if(patch.photoURL !== undefined){
+                    update[`participantInfo.${user.uid}.photoURL`] = patch.photoURL;
+                }
+                batch.update(chatDoc.ref, update);
+            });
+            await batch.commit();
+        } catch(err){
+            console.error("Failed to propagate profile update:", err);
+        }
     }
 
     function refresh(){

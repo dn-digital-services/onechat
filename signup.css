@@ -1,0 +1,314 @@
+/*
+=========================================
+OneChat
+Sign-Up / Profile Setup Screen
+=========================================
+*/
+
+.signup-screen{
+
+    min-height:100vh;
+
+    background:#0B141A;
+
+    color:#E9EDEF;
+
+    font-family:var(--font-family);
+
+    display:flex;
+
+    align-items:flex-start;
+
+    justify-content:center;
+
+    padding:32px 20px 40px;
+
+}
+
+.signup-inner{
+
+    width:100%;
+
+    max-width:420px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:28px;
+
+    animation:fadeIn .4s ease;
+
+}
+
+.signup-top{
+
+    text-align:center;
+
+}
+
+.signup-logo{
+
+    width:64px;
+
+    height:64px;
+
+    border-radius:16px;
+
+    object-fit:cover;
+
+    margin:0 auto 16px;
+
+}
+
+.signup-top h1{
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:#E9EDEF;
+
+    margin-bottom:8px;
+
+}
+
+.signup-top p{
+
+    font-size:14px;
+
+    color:#8696A0;
+
+    line-height:1.6;
+
+}
+
+/* Avatar */
+
+.signup-avatar-wrap{
+
+    position:relative;
+
+    width:96px;
+
+    height:96px;
+
+}
+
+.signup-avatar{
+
+    width:96px;
+
+    height:96px;
+
+    border-radius:50%;
+
+    background:linear-gradient(135deg,#00A884,#0B141A);
+
+    color:#fff;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    overflow:hidden;
+
+    background-size:cover;
+
+    background-position:center;
+
+    cursor:pointer;
+
+}
+
+.signup-avatar-btn{
+
+    position:absolute;
+
+    bottom:0;
+
+    right:0;
+
+    width:30px;
+
+    height:30px;
+
+    border-radius:50%;
+
+    background:#00A884;
+
+    color:#0B141A;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border:2px solid #0B141A;
+
+}
+
+.signup-avatar-btn svg{
+
+    width:15px;
+
+    height:15px;
+
+}
+
+/* Form */
+
+.signup-form{
+
+    width:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.signup-field{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.signup-field label{
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:#8696A0;
+
+    text-transform:uppercase;
+
+    letter-spacing:.4px;
+
+}
+
+.required{
+
+    color:#00A884;
+
+}
+
+.optional{
+
+    color:#8696A0;
+
+    font-weight:400;
+
+    text-transform:none;
+
+    font-size:12px;
+
+}
+
+.signup-field input{
+
+    height:52px;
+
+    background:#1F2C34;
+
+    border:1.5px solid #233138;
+
+    border-radius:12px;
+
+    padding:0 16px;
+
+    font-size:15px;
+
+    color:#E9EDEF;
+
+    font-family:var(--font-family);
+
+    transition:.2s ease;
+
+}
+
+.signup-field input::placeholder{
+
+    color:#8696A0;
+
+}
+
+.signup-field input:focus{
+
+    border-color:#00A884;
+
+    outline:none;
+
+}
+
+.field-hint{
+
+    font-size:12px;
+
+    color:#8696A0;
+
+}
+
+.signup-error{
+
+    min-height:18px;
+
+    font-size:13px;
+
+    color:#EF4444;
+
+    text-align:center;
+
+}
+
+.signup-btn{
+
+    height:54px;
+
+    border-radius:var(--radius-full);
+
+    background:#00A884;
+
+    color:#0B141A;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    font-family:var(--font-family);
+
+    transition:.2s ease;
+
+    margin-top:4px;
+
+}
+
+.signup-btn:hover{
+
+    background:#02c497;
+
+}
+
+.signup-btn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}

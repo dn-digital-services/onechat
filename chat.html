@@ -25,7 +25,7 @@
 
         <button class="back-btn" id="backBtn" title="Back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            <span class="back-badge" id="backBadge">0</span>
+            <span class="back-badge hidden" id="backBadge">0</span>
         </button>
 
         <div class="chat-avatar-wrap">
@@ -42,14 +42,22 @@
 
     <main class="chat-messages" id="chatMessages"></main>
 
+    <!-- Upload progress bar -->
+    <div class="upload-progress-bar hidden" id="uploadProgressBar">
+        <div class="upload-progress-fill" id="uploadProgressFill"></div>
+        <span class="upload-progress-label" id="uploadProgressLabel">Uploading…</span>
+    </div>
+
     <footer class="chat-input-bar">
 
         <button class="round-btn" id="attachBtn" title="Attach">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
 
-        <input type="file" id="attachInput" hidden>
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+        <!-- Gallery: images + videos -->
+        <input type="file" id="attachInput" accept="image/*,video/*" hidden>
+        <!-- Camera: capture photo or video -->
+        <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
 
         <div class="text-field">
 
@@ -71,6 +79,32 @@
 
     </footer>
 
+</div>
+
+<!-- Message context menu (long press / right-click) -->
+<div class="msg-context-menu hidden" id="msgContextMenu">
+    <button class="ctx-item" id="ctxDeleteForMe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete for Me
+    </button>
+    <button class="ctx-item ctx-danger hidden" id="ctxDeleteForEveryone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete for Everyone
+    </button>
+    <button class="ctx-item" id="ctxCancel">Cancel</button>
+</div>
+
+<!-- Full-screen media viewer -->
+<div class="media-viewer hidden" id="mediaViewer">
+    <div class="media-viewer-header">
+        <button class="media-viewer-close" id="mediaViewerClose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <a class="media-viewer-download" id="mediaViewerDownload" download title="Download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+    </div>
+    <div class="media-viewer-body" id="mediaViewerBody"></div>
 </div>
 
 <script src="app.js"></script>

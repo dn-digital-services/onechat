@@ -1,4 +1,4 @@
-import { auth, PhoneAuthProvider, signInWithCredential, ensureUserProfile } from "./firebase.js";
+import { auth, PhoneAuthProvider, signInWithCredential, ensureUserProfile, doc, getDoc, db } from "./firebase.js";
 
 window.addEventListener("load", () => {
 
@@ -82,8 +82,6 @@ window.addEventListener("load", () => {
 
         if(resendLink.classList.contains("disabled")) return;
 
-        // Re-sending requires a fresh reCAPTCHA challenge, so send the user
-        // back to the login screen to request a new code.
         window.location.href = "login.html";
 
     });
@@ -109,12 +107,22 @@ window.addEventListener("load", () => {
         signInWithCredential(auth, credential)
             .then(async (result) => {
 
-                await ensureUserProfile(result.user, { phone: phone || result.user.phoneNumber || "" });
+                const { isNew } = await ensureUserProfile(result.user, { phone: phone || result.user.phoneNumber || "" });
 
                 sessionStorage.removeItem("oc_verification_id");
                 sessionStorage.removeItem("oc_phone");
 
-                window.location.href = "permissions.html";
+                // Check if user is already onboarded
+                const userSnap = await getDoc(doc(db, "users", result.user.uid));
+                const profile = userSnap.exists() ? userSnap.data() : null;
+
+                if(profile && profile.onboarded === true){
+                    // Returning user – go straight home
+                    window.location.href = "home.html";
+                } else {
+                    // New user – must complete sign-up
+                    window.location.href = "signup.html";
+                }
 
             })
             .catch((err) => {

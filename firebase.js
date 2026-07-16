@@ -25,6 +25,7 @@ import {
     getDocs,
     setDoc,
     updateDoc,
+    deleteDoc,
     writeBatch,
     collection,
     addDoc,
@@ -35,14 +36,22 @@ import {
     onSnapshot,
     serverTimestamp,
     increment,
+    arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 import {
     getStorage,
     ref,
     uploadBytes,
+    uploadBytesResumable,
     getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+import {
+    getMessaging,
+    getToken,
+    onMessage,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js";
 
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -62,6 +71,19 @@ export const db = initializeFirestore(app, {
 
 export const storage = getStorage(app);
 
+let _messaging = null;
+
+export function getMessagingInstance(){
+    if(!_messaging){
+        try {
+            _messaging = getMessaging(app);
+        } catch(e){
+            console.warn("FCM not available:", e);
+        }
+    }
+    return _messaging;
+}
+
 export {
     RecaptchaVerifier,
     signInWithPhoneNumber,
@@ -75,6 +97,7 @@ export {
     getDocs,
     setDoc,
     updateDoc,
+    deleteDoc,
     writeBatch,
     collection,
     addDoc,
@@ -85,9 +108,13 @@ export {
     onSnapshot,
     serverTimestamp,
     increment,
+    arrayUnion,
     ref,
     uploadBytes,
+    uploadBytesResumable,
     getDownloadURL,
+    getToken,
+    onMessage,
 };
 
 export function slugify(text){
@@ -129,12 +156,6 @@ async function readDocWithRetry(ref){
 // ==========================================================================
 // Presence (online / offline / last seen)
 // ==========================================================================
-// Firestore has no built-in "onDisconnect" (that's a Realtime Database
-// feature), so presence here is heartbeat-based: while a page is visible we
-// touch users/{uid}.lastSeen every 25s and set online=true; the moment the
-// tab is hidden/closed we flip online=false. Readers additionally treat a
-// stale heartbeat (see ocIsOnline in app.js) as offline, so a crashed tab
-// that never fired beforeunload doesn't show "online" forever.
 let presenceStarted = false;
 
 export function startPresence(uid){
@@ -189,7 +210,7 @@ export function waitForAuthUser(){
 }
 
 // Ensures a users/{uid} profile doc exists for a freshly authenticated user
-// (phone-OTP is the only auth method), then returns it.
+// (phone-OTP is the only auth method), then returns both the ref and the snap.
 export async function ensureUserProfile(user, extra){
 
     const userRef = doc(db, "users", user.uid);
@@ -199,8 +220,9 @@ export async function ensureUserProfile(user, extra){
 
         await setDoc(userRef, {
             phone: user.phoneNumber || "",
-            displayName: "OneChat User",
+            displayName: "",
             about: "Available",
+            email: "",
             onboarded: false,
             createdAt: serverTimestamp(),
             ...extra,
@@ -208,7 +230,7 @@ export async function ensureUserProfile(user, extra){
 
     }
 
-    return userRef;
+    return { userRef, isNew: !snap.exists() };
 
 }
 
@@ -228,9 +250,6 @@ export async function requireAuthAndOnboarding(redirectTo){
     const userRef = doc(db, "users", user.uid);
     let snap = await readDocWithRetry(userRef);
 
-    // The user is authenticated but has no profile doc yet (e.g. it was never
-    // created, or was lost) -- create it instead of treating this as an error,
-    // then re-read so callers always get a real profile object back.
     if(!snap.exists()){
         await ensureUserProfile(user);
         snap = await readDocWithRetry(userRef);
@@ -246,5 +265,42 @@ export async function requireAuthAndOnboarding(redirectTo){
     startPresence(user.uid);
 
     return { user, profile };
+
+}
+
+// ==========================================================================
+// FCM Token Registration
+// ==========================================================================
+export async function registerFCMToken(uid){
+
+    try {
+
+        const messaging = getMessagingInstance();
+        if(!messaging) return null;
+
+        // Service worker must be registered first
+        if(!("serviceWorker" in navigator)) return null;
+
+        const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js").catch(() => null);
+        if(!reg) return null;
+
+        const vapidKey = firebaseConfig.vapidKey || "";
+
+        const token = await getToken(messaging, {
+            vapidKey,
+            serviceWorkerRegistration: reg,
+        });
+
+        if(token){
+            // Save token to Firestore
+            await updateDoc(doc(db, "users", uid), { fcmToken: token }).catch(() => {});
+        }
+
+        return token;
+
+    } catch(err) {
+        console.warn("FCM token registration failed:", err);
+        return null;
+    }
 
 }

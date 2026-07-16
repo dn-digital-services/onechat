@@ -1,10 +1,12 @@
 import {
     db,
     storage,
+    auth,
     doc,
     getDoc,
     setDoc,
     updateDoc,
+    deleteDoc,
     writeBatch,
     collection,
     addDoc,
@@ -13,8 +15,9 @@ import {
     onSnapshot,
     serverTimestamp,
     increment,
+    arrayUnion,
     ref,
-    uploadBytes,
+    uploadBytesResumable,
     getDownloadURL,
     requireAuthAndOnboarding,
 } from "./firebase.js";
@@ -43,8 +46,6 @@ window.addEventListener("load", async () => {
     const messagesRef = collection(chatDocRef, "messages");
     const otherUserRef = doc(db, "users", otherUid);
 
-    // Make sure the chat document exists even if this page was reached in some
-    // way other than the New Chat search flow (e.g. a bookmarked/shared link).
     await setDoc(chatDocRef, {
         participants: [user.uid, otherUid],
         unreadCount: { [user.uid]: 0, [otherUid]: 0 },
@@ -118,12 +119,15 @@ window.addEventListener("load", async () => {
 
     const messagesEl = document.getElementById("chatMessages");
 
+    // ── Icons ──────────────────────────────────────────────────────────────────
+
     const ICONS = {
         share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>`,
         sentTick: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>`,
         deliveredTicks: `<svg class="tick-delivered" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4 4L14 8"/><path d="M9 12l4 4 9-10"/></svg>`,
         readTicks: `<svg class="tick-read" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4 4L14 8"/><path d="M9 12l4 4 9-10"/></svg>`,
         lock: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
+        play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
     };
 
     function statusTicksHtml(status){
@@ -145,17 +149,28 @@ window.addEventListener("load", async () => {
         messagesEl.appendChild(el);
     }
 
-    function addSystemNote(icon, html, muted){
+    function addSystemNote(icon, html){
         const el = document.createElement("div");
-        el.className = "system-note" + (muted ? " muted" : "");
+        el.className = "system-note";
         el.innerHTML = `${icon}<span class="system-note-text">${html}</span>`;
         messagesEl.appendChild(el);
     }
 
-    function addFileMessage({ outgoing, fileName, meta, time, status }){
+    function addDeletedMessage({ outgoing }){
+        const row = document.createElement("div");
+        row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
+        row.innerHTML = `<div class="bubble text deleted-msg">
+            <span class="msg-body"><em>🚫 This message was deleted</em></span>
+        </div>`;
+        messagesEl.appendChild(row);
+    }
+
+    function addFileMessage({ msgId, outgoing, fileName, meta, fileURL, time, status }){
 
         const row = document.createElement("div");
         row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
+        row.dataset.msgId = msgId;
+        row.dataset.outgoing = outgoing ? "1" : "0";
 
         row.innerHTML = `
             <span class="share-btn">${ICONS.share}</span>
@@ -163,52 +178,91 @@ window.addEventListener("load", async () => {
                 <div class="file-preview">
                     <div class="thumb"></div>
                     <div class="file-row">
-                        <span class="file-icon">DOC</span>
+                        <span class="file-icon">${(fileName || "").split(".").pop().toUpperCase().slice(0,4) || "DOC"}</span>
                         <div class="file-info">
                             <div class="file-name">${escapeHtml(fileName)}</div>
                             <div class="file-meta">${escapeHtml(meta || "")}</div>
                         </div>
+                        ${fileURL ? `<a class="file-dl-btn" href="${fileURL}" download="${escapeHtml(fileName)}" target="_blank" title="Download">↓</a>` : ""}
                     </div>
                 </div>
                 <span class="bubble-time">${time} ${outgoing ? statusTicksHtml(status) : ""}</span>
             </div>
         `;
 
+        bindLongPress(row);
         messagesEl.appendChild(row);
 
     }
 
-    function addImageMessage({ outgoing, fileURL, time, status }){
+    function addImageMessage({ msgId, outgoing, fileURL, time, status }){
 
         const row = document.createElement("div");
         row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
+        row.dataset.msgId = msgId;
+        row.dataset.outgoing = outgoing ? "1" : "0";
 
         row.innerHTML = `
             <span class="share-btn">${ICONS.share}</span>
             <div class="bubble">
-                <div class="image-preview">${fileURL ? `<img src="${fileURL}" alt="Photo">` : ""}</div>
+                <div class="image-preview clickable-media" data-url="${fileURL || ""}">
+                    ${fileURL ? `<img src="${fileURL}" alt="Photo" loading="lazy">` : "<div class='img-placeholder'>📷</div>"}
+                </div>
                 <span class="bubble-time">${time} ${outgoing ? statusTicksHtml(status) : ""}</span>
             </div>
         `;
 
+        if(fileURL){
+            row.querySelector(".clickable-media").addEventListener("click", () => openMediaViewer(fileURL, "image"));
+        }
+
+        bindLongPress(row);
         messagesEl.appendChild(row);
 
     }
 
-    function addTextMessage({ outgoing, message, time, status }){
+    function addVideoMessage({ msgId, outgoing, fileURL, time, status }){
 
         const row = document.createElement("div");
         row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
-
-        const timeLabel = time;
+        row.dataset.msgId = msgId;
+        row.dataset.outgoing = outgoing ? "1" : "0";
 
         row.innerHTML = `
-            <div class="bubble text">
-                <span class="msg-body">${escapeHtml(message)}<span class="time-spacer">${timeLabel}</span></span>
+            <span class="share-btn">${ICONS.share}</span>
+            <div class="bubble">
+                <div class="video-preview clickable-media" data-url="${fileURL || ""}">
+                    <video src="${fileURL || ""}" preload="metadata" class="video-thumb"></video>
+                    <div class="video-play-overlay">${ICONS.play}</div>
+                </div>
                 <span class="bubble-time">${time} ${outgoing ? statusTicksHtml(status) : ""}</span>
             </div>
         `;
 
+        if(fileURL){
+            row.querySelector(".clickable-media").addEventListener("click", () => openMediaViewer(fileURL, "video"));
+        }
+
+        bindLongPress(row);
+        messagesEl.appendChild(row);
+
+    }
+
+    function addTextMessage({ msgId, outgoing, message, time, status }){
+
+        const row = document.createElement("div");
+        row.className = "msg-row " + (outgoing ? "outgoing" : "incoming");
+        row.dataset.msgId = msgId;
+        row.dataset.outgoing = outgoing ? "1" : "0";
+
+        row.innerHTML = `
+            <div class="bubble text">
+                <span class="msg-body">${escapeHtml(message)}<span class="time-spacer">${time}</span></span>
+                <span class="bubble-time">${time} ${outgoing ? statusTicksHtml(status) : ""}</span>
+            </div>
+        `;
+
+        bindLongPress(row);
         messagesEl.appendChild(row);
 
     }
@@ -216,6 +270,142 @@ window.addEventListener("load", async () => {
     function scrollToBottom(){
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
+
+    // ── Media Viewer ───────────────────────────────────────────────────────────
+
+    const mediaViewer = document.getElementById("mediaViewer");
+    const mediaViewerBody = document.getElementById("mediaViewerBody");
+    const mediaViewerDownload = document.getElementById("mediaViewerDownload");
+    const mediaViewerClose = document.getElementById("mediaViewerClose");
+
+    function openMediaViewer(url, type){
+        mediaViewerBody.innerHTML = "";
+        mediaViewerDownload.href = url;
+
+        if(type === "video"){
+            const vid = document.createElement("video");
+            vid.src = url;
+            vid.controls = true;
+            vid.autoplay = true;
+            vid.className = "viewer-video";
+            mediaViewerBody.appendChild(vid);
+        } else {
+            const img = document.createElement("img");
+            img.src = url;
+            img.className = "viewer-image";
+            mediaViewerBody.appendChild(img);
+        }
+
+        mediaViewer.classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeMediaViewer(){
+        mediaViewer.classList.add("hidden");
+        document.body.style.overflow = "";
+        // Pause any video
+        const vid = mediaViewerBody.querySelector("video");
+        if(vid) vid.pause();
+        mediaViewerBody.innerHTML = "";
+    }
+
+    mediaViewerClose.addEventListener("click", closeMediaViewer);
+    mediaViewer.addEventListener("click", (e) => {
+        if(e.target === mediaViewer) closeMediaViewer();
+    });
+
+    // ── Context Menu (Long-press / Right-click) ────────────────────────────────
+
+    const contextMenu = document.getElementById("msgContextMenu");
+    const ctxDeleteForMe = document.getElementById("ctxDeleteForMe");
+    const ctxDeleteForEveryone = document.getElementById("ctxDeleteForEveryone");
+    const ctxCancel = document.getElementById("ctxCancel");
+
+    let activeContextMsgId = null;
+    let activeContextOutgoing = false;
+
+    function showContextMenu(msgId, outgoing, x, y){
+        activeContextMsgId = msgId;
+        activeContextOutgoing = outgoing;
+
+        ctxDeleteForEveryone.classList.toggle("hidden", !outgoing);
+
+        contextMenu.classList.remove("hidden");
+
+        // Position the menu, keeping it inside the viewport
+        const mw = contextMenu.offsetWidth || 180;
+        const mh = contextMenu.offsetHeight || 120;
+
+        let left = Math.min(x, window.innerWidth - mw - 8);
+        let top = Math.min(y, window.innerHeight - mh - 8);
+
+        contextMenu.style.left = Math.max(8, left) + "px";
+        contextMenu.style.top = Math.max(8, top) + "px";
+    }
+
+    function hideContextMenu(){
+        contextMenu.classList.add("hidden");
+        activeContextMsgId = null;
+    }
+
+    document.addEventListener("click", (e) => {
+        if(!contextMenu.contains(e.target)) hideContextMenu();
+    });
+
+    ctxCancel.addEventListener("click", hideContextMenu);
+
+    ctxDeleteForMe.addEventListener("click", async () => {
+        if(!activeContextMsgId) return;
+        hideContextMenu();
+        try {
+            const msgRef = doc(messagesRef, activeContextMsgId);
+            await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
+        } catch(err){ console.error("Delete for Me failed:", err); }
+    });
+
+    ctxDeleteForEveryone.addEventListener("click", async () => {
+        if(!activeContextMsgId) return;
+        hideContextMenu();
+        try {
+            const msgRef = doc(messagesRef, activeContextMsgId);
+            await updateDoc(msgRef, { deleted: true, message: "This message was deleted", fileURL: null });
+        } catch(err){ console.error("Delete for Everyone failed:", err); }
+    });
+
+    function bindLongPress(row){
+
+        let timer = null;
+
+        function start(x, y){
+            timer = setTimeout(() => {
+                const msgId = row.dataset.msgId;
+                const outgoing = row.dataset.outgoing === "1";
+                if(msgId) showContextMenu(msgId, outgoing, x, y);
+            }, 500);
+        }
+
+        function cancel(){
+            if(timer){ clearTimeout(timer); timer = null; }
+        }
+
+        row.addEventListener("touchstart", (e) => {
+            const t = e.touches[0];
+            start(t.clientX, t.clientY);
+        }, { passive: true });
+
+        row.addEventListener("touchend", cancel, { passive: true });
+        row.addEventListener("touchmove", cancel, { passive: true });
+
+        row.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            const msgId = row.dataset.msgId;
+            const outgoing = row.dataset.outgoing === "1";
+            if(msgId) showContextMenu(msgId, outgoing, e.clientX, e.clientY);
+        });
+
+    }
+
+    // ── Messages Snapshot ──────────────────────────────────────────────────────
 
     addSystemNote(ICONS.lock, "Messages are private to this conversation. Only you and the other participant can see them.");
 
@@ -233,21 +423,33 @@ window.addEventListener("load", async () => {
 
         snap.forEach((docSnap) => {
 
+            const msgId = docSnap.id;
             const msg = docSnap.data();
             const outgoing = msg.senderId === user.uid;
             const time = ocFormatMessageTime(msg.timestamp);
 
-            if(msg.type === "file"){
-                addFileMessage({ ...msg, outgoing, time });
-            } else if(msg.type === "image"){
-                addImageMessage({ ...msg, outgoing, time });
-            } else {
-                addTextMessage({ ...msg, outgoing, time });
+            // Skip messages deleted for this user
+            if(msg.deletedFor && msg.deletedFor.includes(user.uid)){
+                return;
             }
 
-            // We have this chat open right now, so any incoming message that
-            // isn't already marked "seen" gets bumped straight there -- the
-            // recipient is actively looking at it.
+            // Deleted for everyone – show placeholder
+            if(msg.deleted){
+                addDeletedMessage({ outgoing });
+                return;
+            }
+
+            if(msg.type === "file"){
+                addFileMessage({ msgId, ...msg, outgoing, time });
+            } else if(msg.type === "image"){
+                addImageMessage({ msgId, ...msg, outgoing, time });
+            } else if(msg.type === "video"){
+                addVideoMessage({ msgId, ...msg, outgoing, time });
+            } else {
+                addTextMessage({ msgId, ...msg, outgoing, time });
+            }
+
+            // Mark incoming messages as "seen" while the chat is open
             if(!outgoing && msg.status !== "seen"){
                 batch.update(docSnap.ref, { status: "seen" });
                 hasUpdates = true;
@@ -277,7 +479,7 @@ window.addEventListener("load", async () => {
 
     }, (err) => console.error("Failed to load messages:", err));
 
-    // ---- Typing indicator ----
+    // ── Typing indicator ───────────────────────────────────────────────────────
 
     let typingState = false;
     let typingTimeout = null;
@@ -319,6 +521,8 @@ window.addEventListener("load", async () => {
 
     });
 
+    // ── Participant info denormalisation ───────────────────────────────────────
+
     async function refreshMyDenormalizedInfo(){
 
         await updateDoc(chatDocRef, {
@@ -330,6 +534,43 @@ window.addEventListener("load", async () => {
         }).catch(() => {});
 
     }
+
+    // ── FCM notification helper ────────────────────────────────────────────────
+
+    async function notifyOtherUser(payload){
+        try {
+            const snap = await getDoc(otherUserRef);
+            if(!snap.exists()) return;
+            const fcmToken = snap.data().fcmToken;
+            if(!fcmToken) return;
+
+            // Get a fresh Firebase ID token to authenticate the /api/notify call
+            const idToken = await auth.currentUser.getIdToken();
+
+            await fetch("/api/notify", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({
+                    token: fcmToken,
+                    title: profile.displayName || "OneChat",
+                    body: payload.body,
+                    data: {
+                        uid: user.uid,
+                        name: profile.displayName || "OneChat User",
+                        chatId,
+                    },
+                }),
+            });
+        } catch(err){
+            // Non-critical – notifications best-effort
+            console.warn("FCM notify failed:", err);
+        }
+    }
+
+    // ── Send text message ──────────────────────────────────────────────────────
 
     async function sendTextMessage(){
 
@@ -360,6 +601,7 @@ window.addEventListener("load", async () => {
         });
 
         refreshMyDenormalizedInfo();
+        notifyOtherUser({ body: value });
 
     }
 
@@ -374,61 +616,108 @@ window.addEventListener("load", async () => {
 
     });
 
-    async function sendFile(file, asImage){
+    // ── Upload progress ────────────────────────────────────────────────────────
+
+    const uploadBar = document.getElementById("uploadProgressBar");
+    const uploadFill = document.getElementById("uploadProgressFill");
+    const uploadLabel = document.getElementById("uploadProgressLabel");
+
+    function showUploadProgress(percent){
+        uploadBar.classList.remove("hidden");
+        uploadFill.style.width = Math.round(percent) + "%";
+        uploadLabel.textContent = percent >= 100 ? "Processing…" : `Uploading ${Math.round(percent)}%`;
+    }
+
+    function hideUploadProgress(){
+        uploadBar.classList.add("hidden");
+        uploadFill.style.width = "0%";
+    }
+
+    // ── Send media file (image / video / document) ─────────────────────────────
+
+    async function sendFile(file){
 
         if(!file) return;
 
-        const path = `users/${user.uid}/chats/${chatId}/files/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, path);
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        const safeName = file.name || (isImage ? `photo_${Date.now()}.jpg` : isVideo ? `video_${Date.now()}.mp4` : `file_${Date.now()}`);
 
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        const storagePath = `users/${user.uid}/chats/${chatId}/files/${Date.now()}_${safeName}`;
+        const storageRef = ref(storage, storagePath);
 
-        const base = {
-            senderId: user.uid,
-            receiverId: otherUid,
-            status: "sent",
-            timestamp: serverTimestamp(),
-            fileURL: url,
-        };
+        const task = uploadBytesResumable(storageRef, file);
 
-        if(asImage){
+        sendBtn.disabled = true;
+        showUploadProgress(0);
 
-            await addDoc(messagesRef, { ...base, type: "image", message: "Photo" });
+        try {
+
+            await new Promise((resolve, reject) => {
+                task.on("state_changed",
+                    (snap) => showUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
+                    reject,
+                    resolve,
+                );
+            });
+
+            showUploadProgress(100);
+            const url = await getDownloadURL(storageRef);
+            hideUploadProgress();
+
+            const base = {
+                senderId: user.uid,
+                receiverId: otherUid,
+                status: "sent",
+                timestamp: serverTimestamp(),
+                fileURL: url,
+            };
+
+            let msgType = "file";
+            let lastMsg = safeName;
+            let notifyBody = "📎 File";
+
+            if(isImage){
+                msgType = "image";
+                lastMsg = "Photo";
+                notifyBody = "📷 Photo";
+                await addDoc(messagesRef, { ...base, type: "image", message: "Photo" });
+            } else if(isVideo){
+                msgType = "video";
+                lastMsg = "Video";
+                notifyBody = "🎥 Video";
+                await addDoc(messagesRef, { ...base, type: "video", message: "Video" });
+            } else {
+                const sizeKb = Math.max(1, Math.round(file.size / 1024));
+                const ext = (safeName.split(".").pop() || "file").toUpperCase();
+                await addDoc(messagesRef, {
+                    ...base,
+                    type: "file",
+                    message: safeName,
+                    fileName: safeName,
+                    meta: `${sizeKb} KB · ${ext}`,
+                });
+            }
 
             await updateDoc(chatDocRef, {
-                lastMessage: "Photo",
-                lastMessageType: "image",
+                lastMessage: lastMsg,
+                lastMessageType: msgType,
                 lastMessageSenderId: user.uid,
                 lastMessageStatus: "sent",
                 updatedAt: serverTimestamp(),
                 [`unreadCount.${otherUid}`]: increment(1),
             });
 
-        } else {
+            refreshMyDenormalizedInfo();
+            notifyOtherUser({ body: notifyBody });
 
-            const sizeKb = Math.max(1, Math.round(file.size / 1024));
-
-            await addDoc(messagesRef, {
-                ...base,
-                type: "file",
-                message: file.name,
-                fileName: file.name,
-                meta: `${sizeKb} KB \u00b7 ${(file.name.split(".").pop() || "file")}`,
-            });
-
-            await updateDoc(chatDocRef, {
-                lastMessage: file.name,
-                lastMessageType: "file",
-                lastMessageSenderId: user.uid,
-                lastMessageStatus: "sent",
-                updatedAt: serverTimestamp(),
-                [`unreadCount.${otherUid}`]: increment(1),
-            });
-
+        } catch(err){
+            console.error("File upload failed:", err);
+            hideUploadProgress();
+            alert("Couldn't upload the file. Please check your connection and try again.");
+        } finally {
+            sendBtn.disabled = false;
         }
-
-        refreshMyDenormalizedInfo();
 
     }
 
@@ -444,27 +733,15 @@ window.addEventListener("load", async () => {
     });
 
     attachInput.addEventListener("change", (e) => {
-
         const file = e.target.files && e.target.files[0];
-
-        if(file){
-            sendFile(file, file.type.startsWith("image/"));
-        }
-
+        if(file) sendFile(file);
         attachInput.value = "";
-
     });
 
     cameraInput.addEventListener("change", (e) => {
-
         const file = e.target.files && e.target.files[0];
-
-        if(file){
-            sendFile(file, true);
-        }
-
+        if(file) sendFile(file);
         cameraInput.value = "";
-
     });
 
     window.addEventListener("beforeunload", () => setTyping(false));
