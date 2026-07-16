@@ -184,6 +184,68 @@ Version : 1.0
 
 }
 
+/* Action message – shown when phone is already registered or has no account */
+
+.otp-action-msg{
+
+    margin-top:16px;
+
+    padding:16px;
+
+    border-radius:12px;
+
+    background:rgba(239,68,68,.08);
+
+    border:1px solid rgba(239,68,68,.25);
+
+    text-align:center;
+
+}
+
+.otp-action-msg p{
+
+    font-size:14px;
+
+    color:var(--text-primary);
+
+    line-height:1.5;
+
+    margin-bottom:12px;
+
+}
+
+.otp-action-btn{
+
+    display:inline-block;
+
+    padding:10px 24px;
+
+    border-radius:var(--radius-full);
+
+    background:var(--primary-color);
+
+    color:#fff;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    transition:var(--transition-fast);
+
+}
+
+.otp-action-btn:hover{
+
+    background:var(--primary-hover);
+
+}
+
+.otp-action-msg.hidden{
+
+    display:none;
+
+}
+
 /* Small Mobile */
 
 @media (max-width:360px){

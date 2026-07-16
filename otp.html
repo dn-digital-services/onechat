@@ -26,7 +26,7 @@
         <h1>Verify your number</h1>
 
         <p>
-            We sent a 4-digit code to
+            We sent a 6-digit code to
             <br>
             <span id="identifierText">your number</span>
         </p>
@@ -47,6 +47,13 @@
         </div>
 
         <p id="errorMsg" class="error-msg"></p>
+
+        <!-- Shown when the user is already registered (sign-up) or has no
+             account (login). Presents a direct action link to resolve it. -->
+        <div id="otpActionMsg" class="otp-action-msg hidden">
+            <p id="otpActionText"></p>
+            <a id="otpActionBtn" href="#" class="otp-action-btn"></a>
+        </div>
 
         <p class="resend-text">
 

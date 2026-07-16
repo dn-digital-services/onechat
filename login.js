@@ -163,6 +163,8 @@ window.addEventListener("load", () => {
 
                 sessionStorage.setItem("oc_verification_id", confirmationResult.verificationId);
                 sessionStorage.setItem("oc_phone", fullPhone);
+                // Mark this as the login flow so otp.js applies the right routing.
+                sessionStorage.setItem("oc_flow", "login");
 
                 window.location.href = "otp.html";
 

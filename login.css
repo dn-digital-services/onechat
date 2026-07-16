@@ -221,7 +221,9 @@ Version : 1.0
 
 }
 
-#loginBtn{
+/* Primary action button – shared by login (#loginBtn) and sign-up (#sendOtpBtn) */
+#loginBtn,
+#sendOtpBtn{
 
     width:100%;
     height:var(--button-height);
@@ -240,13 +242,15 @@ Version : 1.0
 
 }
 
-#loginBtn:hover{
+#loginBtn:hover,
+#sendOtpBtn:hover{
 
     background:var(--primary-hover);
 
 }
 
-#loginBtn:disabled{
+#loginBtn:disabled,
+#sendOtpBtn:disabled{
 
     opacity:.6;
 
