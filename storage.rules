@@ -3,10 +3,17 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Every object lives under users/{uid}/... and is only ever
-    // readable/writable by that same authenticated user.
+    // User avatar / profile assets — only the owning user may write.
     match /users/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Chat media (images, videos, documents) — any authenticated user
+    // may upload and download.  The chatId is a sorted pair of real UIDs
+    // so it cannot be guessed; authentication is the primary gate here.
+    match /chats/{chatId}/files/{allPaths=**} {
+      allow read, write: if request.auth != null;
     }
 
   }

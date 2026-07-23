@@ -17,7 +17,7 @@ import {
     increment,
     arrayUnion,
     ref,
-    uploadBytes,
+    uploadBytesResumable,
     getDownloadURL,
     requireAuthAndOnboarding,
 } from "./firebase.js";
@@ -622,49 +622,36 @@ window.addEventListener("load", async () => {
 
     // ── Upload progress ────────────────────────────────────────────────────────
 
-    const uploadBar = document.getElementById("uploadProgressBar");
-    const uploadFill = document.getElementById("uploadProgressFill");
+    const uploadBar   = document.getElementById("uploadProgressBar");
+    const uploadFill  = document.getElementById("uploadProgressFill");
     const uploadLabel = document.getElementById("uploadProgressLabel");
-
-    let _fakeProgressTimer = null;
 
     function showUploadProgress(percent){
         uploadBar.classList.remove("hidden");
-        uploadFill.style.width = Math.min(100, Math.round(percent)) + "%";
-        uploadLabel.textContent = percent >= 100 ? "Processing…" : `Uploading ${Math.min(99, Math.round(percent))}%`;
+        const pct = Math.min(100, Math.round(percent));
+        uploadFill.style.width = pct + "%";
+        uploadLabel.textContent = pct >= 100 ? "Processing…" : `Uploading ${pct}%`;
     }
 
     function hideUploadProgress(){
-        if(_fakeProgressTimer){ clearInterval(_fakeProgressTimer); _fakeProgressTimer = null; }
         uploadBar.classList.add("hidden");
         uploadFill.style.width = "0%";
     }
 
-    // Animate a fake progress bar that creeps toward 90 % while the upload runs.
-    // Firebase's uploadBytes is a single-shot request with no streaming progress;
-    // this gives the user feedback that something is happening.
-    function startFakeProgress(){
-        let pct = 0;
-        showUploadProgress(0);
-        _fakeProgressTimer = setInterval(() => {
-            // Converges toward 90 % asymptotically
-            pct += (90 - pct) * 0.12;
-            showUploadProgress(pct);
-        }, 300);
-    }
-
     // ── Send media file (image / video / document) ─────────────────────────────
-    // Uses uploadBytes (single-shot, not resumable) – simpler, fewer round-trips,
-    // and more reliable through Replit's proxy than a multi-step resumable session.
+    // Uses uploadBytesResumable for real progress reporting and built-in retry.
+    // Storage path: chats/{chatId}/files/… (covered by storage.rules).
 
-    async function sendFile(file){
+    async function sendFile(file, _attempt){
 
         if(!file) return;
+
+        const attempt = _attempt || 0;
 
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
 
-        // Build a safe filename: strip path separators, fall back to a timestamp name
+        // Build a safe filename; fall back to a timestamp-based name.
         const rawName = (file.name || "").replace(/[/\\]/g, "_") || (
             isImage ? `photo_${Date.now()}.jpg`
           : isVideo ? `video_${Date.now()}.mp4`
@@ -672,62 +659,123 @@ window.addEventListener("load", async () => {
         );
 
         const storagePath = `chats/${chatId}/files/${Date.now()}_${rawName}`;
-        const storageRef = ref(storage, storagePath);
+        const storageRef  = ref(storage, storagePath);
 
         sendBtn.disabled = true;
-        startFakeProgress();
+        showUploadProgress(0);
+
+        let url;
 
         try {
 
-            // Single-shot upload – throws immediately on auth/rules/network failure
-            const snapshot = await uploadBytes(storageRef, file);
+            url = await new Promise((resolve, reject) => {
 
-            if(_fakeProgressTimer){ clearInterval(_fakeProgressTimer); _fakeProgressTimer = null; }
-            showUploadProgress(100);
+                const task = uploadBytesResumable(storageRef, file);
 
-            const url = await getDownloadURL(snapshot.ref);
+                task.on(
+                    "state_changed",
+
+                    // Progress callback — real bytes, no fake timer.
+                    (snapshot) => {
+                        const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        showUploadProgress(pct);
+                    },
+
+                    // Error callback.
+                    (err) => reject(err),
+
+                    // Completion callback — get download URL here so any error
+                    // is caught by the same promise rejection path.
+                    () => {
+                        getDownloadURL(task.snapshot.ref)
+                            .then(resolve)
+                            .catch(reject);
+                    },
+                );
+
+            });
+
+        } catch(err){
+
             hideUploadProgress();
+            sendBtn.disabled = false;
 
-            const base = {
-                senderId: user.uid,
-                receiverId: otherUid,
-                status: "sent",
-                timestamp: serverTimestamp(),
-                fileURL: url,
-            };
+            // Retry once on transient network / server errors.
+            const transient = [
+                "storage/retry-limit-exceeded",
+                "storage/canceled",
+                "storage/unknown",
+            ].includes(err.code) || /network|fetch|timeout/i.test(err.message || "");
 
-            let msgType = "file";
-            let lastMsg = rawName;
-            let notifyBody = "📎 File";
+            if(attempt === 0 && transient){
+                console.warn("Upload failed (attempt 1), retrying…", err.code || err.message);
+                return sendFile(file, 1);
+            }
+
+            // Log the exact Firebase error for debugging.
+            console.error("File upload failed:", err.code || "no-code", err.message || err);
+
+            let msg = `Upload failed.\nError: ${err.code || "unknown"}\n${err.message || ""}`.trim();
+            if(err.code === "storage/unauthorized")
+                msg = `Upload denied — Firebase Storage rules rejected the path.\nCode: ${err.code}\n${err.message}`;
+            else if(err.code === "storage/quota-exceeded")
+                msg = "Storage quota exceeded. Free up space in Firebase console.";
+            else if(err.code === "storage/invalid-argument")
+                msg = "Invalid file — please choose a different file.";
+
+            alert(msg);
+            return;
+
+        }
+
+        // ── Upload complete; url is the permanent download URL ─────────────────
+
+        showUploadProgress(100);
+
+        const base = {
+            senderId:   user.uid,
+            receiverId: otherUid,
+            status:     "sent",
+            timestamp:  serverTimestamp(),
+            fileURL:    url,
+        };
+
+        let msgType    = "file";
+        let lastMsg    = rawName;
+        let notifyBody = "📎 File";
+
+        try {
 
             if(isImage){
-                msgType = "image";
-                lastMsg = "Photo";
+                msgType    = "image";
+                lastMsg    = "Photo";
                 notifyBody = "📷 Photo";
                 await addDoc(messagesRef, { ...base, type: "image", message: "Photo" });
+
             } else if(isVideo){
-                msgType = "video";
-                lastMsg = "Video";
+                msgType    = "video";
+                lastMsg    = "Video";
                 notifyBody = "🎥 Video";
                 await addDoc(messagesRef, { ...base, type: "video", message: "Video" });
+
             } else {
                 const sizeKb = Math.max(1, Math.round(file.size / 1024));
-                const ext = (rawName.split(".").pop() || "file").toUpperCase().slice(0, 6);
+                const ext    = (rawName.split(".").pop() || "file").toUpperCase().slice(0, 6);
                 await addDoc(messagesRef, {
                     ...base,
-                    type: "file",
-                    message: rawName,
+                    type:     "file",
+                    message:  rawName,
                     fileName: rawName,
-                    meta: `${sizeKb} KB · ${ext}`,
+                    meta:     `${sizeKb} KB · ${ext}`,
                 });
             }
 
             await updateDoc(chatDocRef, {
-                lastMessage: lastMsg,
-                lastMessageType: msgType,
+                lastMessage:         lastMsg,
+                lastMessageType:     msgType,
                 lastMessageSenderId: user.uid,
-                lastMessageStatus: "sent",
-                updatedAt: serverTimestamp(),
+                lastMessageStatus:   "sent",
+                updatedAt:           serverTimestamp(),
                 [`unreadCount.${otherUid}`]: increment(1),
             });
 
@@ -735,23 +783,15 @@ window.addEventListener("load", async () => {
             notifyOtherUser({ body: notifyBody });
 
         } catch(err){
-            console.error("File upload failed:", err.code || "", err.message || err);
-            hideUploadProgress();
 
-            // Surface a human-readable error instead of silently showing 0%
-            let msg = "Couldn't upload the file. Please try again.";
-            if(err.code === "storage/unauthorized")
-                msg = "Upload permission denied. Check Firebase Storage rules.";
-            else if(err.code === "storage/quota-exceeded")
-                msg = "Storage quota exceeded.";
-            else if(err.code === "storage/invalid-argument")
-                msg = "Invalid file – please try a different one.";
-            else if(err.message)
-                msg = `Upload failed: ${err.message}`;
+            console.error("Failed to save message after upload:", err.code || "", err.message || err);
+            alert(`Media uploaded but message save failed.\nError: ${err.code || err.message}`);
 
-            alert(msg);
         } finally {
+
+            hideUploadProgress();
             sendBtn.disabled = false;
+
         }
 
     }
