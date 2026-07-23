@@ -14,6 +14,8 @@ import {
     requireAuthAndOnboarding,
 } from "./firebase.js";
 
+
+
 window.addEventListener("load", async () => {
 
     const session = await requireAuthAndOnboarding("welcome.html");
@@ -100,6 +102,9 @@ window.addEventListener("load", async () => {
     }
 
     refresh();
+
+    // Dynamic nav Chats badge (non-blocking).
+    loadNavChatsBadge(user.uid).catch(() => {});
 
     document.getElementById("backBtn").addEventListener("click", () => {
         window.location.href = "profile.html";
@@ -196,3 +201,27 @@ window.addEventListener("load", async () => {
     });
 
 });
+
+async function loadNavChatsBadge(uid){
+
+    const snap = await getDocs(
+        query(
+            collection(db, "chats"),
+            where("participants", "array-contains", uid),
+        )
+    );
+
+    let total = 0;
+    snap.forEach((d) => { total += (d.data().unreadCount || {})[uid] || 0; });
+
+    const badge = document.getElementById("navChatsBadge");
+    if(!badge) return;
+
+    if(total > 0){
+        badge.textContent   = total > 99 ? "99+" : String(total);
+        badge.style.display = "";
+    } else {
+        badge.style.display = "none";
+    }
+
+}

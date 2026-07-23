@@ -1,4 +1,13 @@
-import { auth, signOut, requireAuthAndOnboarding } from "./firebase.js";
+import {
+    auth,
+    db,
+    signOut,
+    requireAuthAndOnboarding,
+    collection,
+    query,
+    where,
+    getDocs,
+} from "./firebase.js";
 
 window.addEventListener("load", async () => {
 
@@ -6,23 +15,23 @@ window.addEventListener("load", async () => {
 
     if(!session) return;
 
-    const { profile } = session;
+    const { user, profile } = session;
 
-    const nameEl = document.getElementById("profileName");
-    const headerNameEl = document.getElementById("headerName");
-    const identifierEl = document.getElementById("profileIdentifier");
-    const avatarEl = document.getElementById("profileAvatar");
-    const navAvatarEl = document.getElementById("navAvatar");
+    const nameEl        = document.getElementById("profileName");
+    const headerNameEl  = document.getElementById("headerName");
+    const identifierEl  = document.getElementById("profileIdentifier");
+    const avatarEl      = document.getElementById("profileAvatar");
+    const navAvatarEl   = document.getElementById("navAvatar");
 
-    const name = profile.displayName || "OneChat User";
+    const name     = profile.displayName || "OneChat User";
     const initials = ocGetInitials(name);
 
     identifierEl.textContent = profile.phone || "Not signed in";
 
-    ocApplyAvatar(avatarEl, initials, profile.photoURL);
+    ocApplyAvatar(avatarEl,    initials, profile.photoURL);
     ocApplyAvatar(navAvatarEl, initials, profile.photoURL);
 
-    nameEl.textContent = name;
+    nameEl.textContent       = name;
     headerNameEl.textContent = name;
 
     document.querySelectorAll(".settings-item[data-item]").forEach((item) => {
@@ -44,4 +53,41 @@ window.addEventListener("load", async () => {
 
     });
 
+    // ── Dynamic chats badge ────────────────────────────────────────────────────
+    // Non-blocking: load and display the real total unread message count.
+
+    loadChatsBadge(user.uid).catch(() => {});
+
 });
+
+async function loadChatsBadge(uid){
+
+    const snap = await getDocs(
+        query(
+            collection(db, "chats"),
+            where("participants", "array-contains", uid),
+        )
+    );
+
+    let total = 0;
+
+    snap.forEach((d) => {
+        total += (d.data().unreadCount || {})[uid] || 0;
+    });
+
+    const label = total > 0 ? (total > 99 ? "99+" : String(total)) : "";
+
+    const settingsBadge = document.getElementById("settingsChatsBadge");
+    const navBadge      = document.getElementById("navChatsBadge");
+
+    if(settingsBadge){
+        settingsBadge.textContent  = label;
+        settingsBadge.style.display = label ? "" : "none";
+    }
+
+    if(navBadge){
+        navBadge.textContent  = label;
+        navBadge.style.display = label ? "" : "none";
+    }
+
+}
