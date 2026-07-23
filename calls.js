@@ -1,4 +1,15 @@
-import { requireAuthAndOnboarding } from "./firebase.js";
+import { Timestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+import {
+    db,
+    requireAuthAndOnboarding,
+    collection,
+    query,
+    where,
+    getDocs,
+    orderBy,
+    limit,
+} from "./firebase.js";
 
 window.addEventListener("load", async () => {
 
@@ -6,12 +17,19 @@ window.addEventListener("load", async () => {
 
     if(!session) return;
 
-    const { profile } = session;
+    const { user, profile } = session;
+
+    // ── Nav avatar ─────────────────────────────────────────────────────────────
 
     const navAvatar = document.getElementById("navAvatar");
     ocApplyAvatar(navAvatar, ocGetInitials(profile.displayName || "OneChat User"), profile.photoURL);
 
-    const callsList = document.getElementById("callsList");
+    // ── DOM ────────────────────────────────────────────────────────────────────
+
+    const callsList    = document.getElementById("callsList");
+    const sectionTitle = document.querySelector(".section-title");
+
+    // ── SVG icons (unchanged from original) ───────────────────────────────────
 
     const ICONS = {
 
@@ -29,45 +47,104 @@ window.addEventListener("load", async () => {
 
     };
 
-    const calls = [
-        { name: "Priya Sharma", video: true, type: "incoming", time: "Yesterday" },
-        { name: "Rohan Verma", video: true, type: "incoming", time: "Yesterday" },
-        { name: "Ananya Iyer", video: false, type: "outgoing", time: "Sunday" },
-        { name: "+1 555 019 4821", type: "missed", time: "Sunday", unknown: true },
-        { name: "+1 555 019 4821", video: false, type: "incoming", time: "Sunday", unknown: true },
-        { name: "Kabir Malhotra", video: false, type: "outgoing", time: "Sunday" },
-        { name: "Kabir Malhotra", video: true, type: "incoming", time: "Sunday" },
-        { name: "Kabir Malhotra", video: false, type: "incoming", time: "Sunday" },
-    ];
+    // ── Helpers ────────────────────────────────────────────────────────────────
 
-    calls.forEach((c) => {
+    function formatRelativeTime(ts){
+        if(!ts || typeof ts.toDate !== "function") return "";
+        const date  = ts.toDate();
+        const now   = new Date();
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / 86400000);
 
-        const initials = c.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+        if(diffDays === 0){
+            return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+        if(diffDays === 1) return "Yesterday";
 
-        const typeIcon = ICONS[c.type];
-        const typeLabel = c.type.charAt(0).toUpperCase() + c.type.slice(1);
-        const isMissed = c.type === "missed";
+        const thisWeekStart = new Date(now);
+        thisWeekStart.setDate(now.getDate() - now.getDay());
+        thisWeekStart.setHours(0, 0, 0, 0);
+
+        if(date >= thisWeekStart){
+            return date.toLocaleDateString([], { weekday: "long" });
+        }
+
+        return date.toLocaleDateString([], { day: "numeric", month: "short" });
+    }
+
+    function renderCallItem(c){
+
+        const name      = c.peerName || c.peerPhone || "Unknown";
+        const initials  = ocGetInitials(name);
+        const photoURL  = c.peerPhotoURL || "";
+        const type      = c.type || "incoming";   // "incoming" | "outgoing" | "missed"
+        const isVideo   = Boolean(c.video);
+        const isMissed  = type === "missed";
+        const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+        const timeLabel = formatRelativeTime(c.createdAt);
+        const typeIcon  = ICONS[type] || ICONS.incoming;
 
         const item = document.createElement("div");
         item.className = "call-item";
 
         item.innerHTML = `
-            <div class="avatar">${initials}</div>
+            <div class="avatar"></div>
             <div class="call-info">
-                <h3 class="${isMissed ? "missed" : ""}">${c.name}</h3>
+                <h3 class="${isMissed ? "missed" : ""}">${name}</h3>
                 <div class="call-type ${isMissed ? "missed" : ""}">
-                    ${c.video ? ICONS.video : typeIcon}
+                    ${isVideo ? ICONS.video : typeIcon}
                     <span>${typeLabel}</span>
                 </div>
             </div>
             <div class="call-meta">
-                <span class="call-time">${c.time}</span>
+                <span class="call-time">${timeLabel}</span>
                 <span class="call-info-btn">${ICONS.info}</span>
             </div>
         `;
 
+        ocApplyAvatar(item.querySelector(".avatar"), initials, photoURL);
+
         callsList.appendChild(item);
 
-    });
+    }
+
+    function showEmptyState(){
+        sectionTitle.style.display = "none";
+        callsList.innerHTML = `
+            <div class="calls-empty">
+                <p class="calls-empty-title">No calls yet</p>
+                <p class="calls-empty-sub">Your recent voice and video calls will appear here.</p>
+            </div>
+        `;
+    }
+
+    // ── Load from Firestore ────────────────────────────────────────────────────
+
+    try {
+
+        const snap = await getDocs(
+            query(
+                collection(db, "calls"),
+                where("participants", "array-contains", user.uid),
+                orderBy("createdAt", "desc"),
+                limit(100),
+            )
+        );
+
+        if(snap.empty){
+            showEmptyState();
+            return;
+        }
+
+        snap.forEach((docSnap) => {
+            renderCallItem({ id: docSnap.id, ...docSnap.data() });
+        });
+
+    } catch(err){
+
+        console.error("Failed to load calls:", err);
+        showEmptyState();
+
+    }
 
 });
